@@ -1,0 +1,455 @@
+/* Windows Forensics Tool - Stylesheet */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    overflow: hidden;
+}
+
+.header {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    color: white;
+    padding: 30px;
+    text-align: center;
+}
+
+.header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.header p {
+    font-size: 1.1em;
+    opacity: 0.9;
+}
+
+.nav {
+    background: #34495e;
+    padding: 15px 30px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    border-bottom: 3px solid #2c3e50;
+}
+
+.nav-btn {
+    background: #3498db;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.nav-btn:hover {
+    background: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.content {
+    padding: 30px;
+}
+
+.category {
+    margin-bottom: 40px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.category h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #3498db;
+    font-size: 1.8em;
+}
+
+.command-section {
+    margin-bottom: 30px;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e0e0e0;
+}
+
+.command-header {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    padding: 15px 20px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.command-header.powershell {
+    background: linear-gradient(135deg, #0078d4 0%, #005a9e 100%);
+}
+
+.command-header:hover {
+    background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+}
+
+.command-header.powershell:hover {
+    background: linear-gradient(135deg, #005a9e 0%, #004578 100%);
+}
+
+.command-title {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 1.1em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cmd-badge {
+    background: rgba(255,255,255,0.2);
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 0.7em;
+    font-weight: normal;
+}
+
+.toggle-icon {
+    font-size: 1.3em;
+    transition: transform 0.3s ease;
+}
+
+.command-output {
+    padding: 20px;
+    background: #f8f9fa;
+    border-top: 2px solid #3498db;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.command-output pre {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.empty-output {
+    color: #7f8c8d;
+    font-style: italic;
+    padding: 20px;
+    text-align: center;
+}
+
+.footer {
+    background: #2c3e50;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.command-output::-webkit-scrollbar {
+    width: 10px;
+}
+
+.command-output::-webkit-scrollbar-track {
+    background: #ecf0f1;
+}
+
+.command-output::-webkit-scrollbar-thumb {
+    background: #3498db;
+    border-radius: 5px;
+}
+
+.command-output::-webkit-scrollbar-thumb:hover {
+    background: #2980b9;
+}
+
+/* Table Styling */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 0.9em;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.data-table thead tr {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+    text-align: left;
+    font-weight: bold;
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+.data-table tbody tr {
+    border-bottom: 1px solid #dddddd;
+    transition: background-color 0.2s;
+}
+
+.data-table tbody tr:nth-of-type(even) {
+    background-color: #f8f9fa;
+}
+
+.data-table tbody tr:hover {
+    background-color: #e3f2fd;
+    cursor: pointer;
+}
+
+.data-table tbody tr:last-of-type {
+    border-bottom: 2px solid #3498db;
+}
+
+.data-table .section-header {
+    background-color: #ecf0f1;
+    font-weight: bold;
+}
+
+.route-output {
+    margin: 10px 0;
+}
+
+/* Threat Analysis Styles */
+.threat-dashboard {
+    animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.threat-stat {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.threat-stat:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+
+.regex-analysis-report,
+.hash-analysis-report {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 15px 0;
+}
+
+.threat-summary {
+    margin-bottom: 20px;
+    animation: slideIn 0.6s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.recommendations {
+    list-style-type: none;
+    padding: 0;
+}
+
+.recommendations li {
+    padding: 10px;
+    margin: 8px 0;
+    background: #f8f9fa;
+    border-left: 4px solid #3498db;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.recommendations li:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+}
+
+/* Threat Level Colors */
+.threat-critical {
+    background-color: #ffe6e6 !important;
+    border-left: 5px solid #c0392b !important;
+}
+
+.threat-high {
+    background-color: #fff4e6 !important;
+    border-left: 5px solid #e67e22 !important;
+}
+
+.threat-medium {
+    background-color: #fffde6 !important;
+    border-left: 5px solid #f39c12 !important;
+}
+
+.threat-low {
+    background-color: #e8f8f5 !important;
+    border-left: 5px solid #27ae60 !important;
+}
+
+/* Enhanced Table Styling for Analysis */
+.forensic-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.forensic-table thead {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+}
+
+.forensic-table th {
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.9em;
+    letter-spacing: 0.5px;
+}
+
+.forensic-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.forensic-table tbody tr:hover {
+    background-color: #f5f9fc;
+    transition: background-color 0.2s ease;
+}
+
+.forensic-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Badge Styles */
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-critical {
+    background: #c0392b;
+    color: white;
+}
+
+.badge-high {
+    background: #e67e22;
+    color: white;
+}
+
+.badge-medium {
+    background: #f39c12;
+    color: white;
+}
+
+.badge-low {
+    background: #27ae60;
+    color: white;
+}
+
+/* Monospace for technical data */
+.mono {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9em;
+    background: #f4f4f4;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* Loading animation for future use */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.loading {
+    animation: pulse 2s infinite;
+}
+
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 1.8em;
+    }
+
+    .nav {
+        flex-direction: column;
+    }
+
+    .nav-btn {
+        width: 100%;
+    }
+
+    .data-table {
+        font-size: 0.8em;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 8px 10px;
+    }
+
+    .threat-dashboard {
+        padding: 15px !important;
+    }
+
+    .threat-stat {
+        font-size: 0.9em;
+    }
+}

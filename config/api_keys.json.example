@@ -1,0 +1,18 @@
+{
+    "virustotal": {
+        "api_key": "YOUR_VIRUSTOTAL_API_KEY_HERE",
+        "base_url": "https://www.virustotal.com/api/v3",
+        "rate_limit": 500,
+        "timeout": 30,
+        "enabled": true
+    },
+    "hybrid_analysis": {
+        "api_key": "YOUR_HYBRID_ANALYSIS_API_KEY_HERE",
+        "base_url": "https://www.hybrid-analysis.com/api/v2",
+        "enabled": false
+    },
+    "malwarebazaar": {
+        "base_url": "https://mb-api.abuse.ch/api/v1",
+        "enabled": true
+    }
+}

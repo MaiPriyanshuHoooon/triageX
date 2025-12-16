@@ -1,0 +1,218 @@
+# ========================================
+# Forensic Triage Tool - Dependencies
+# ========================================
+# Python 3.8+ required
+# Installation: pip install -r requirements.txt
+
+# ========================================
+# Core Dependencies (Required)
+# ========================================
+
+# HTTP library for API calls (VirusTotal integration)
+requests>=2.31.0
+
+# License management & encryption
+cryptography>=41.0.0
+
+# GUI Framework (for professional interface)
+PyQt5>=5.15.9
+PyQt5-Qt5>=5.15.2
+PyQt5-sip>=12.12.2
+
+# ========================================
+# Windows-Only Dependencies
+# ========================================
+# These will only install on Windows systems
+
+# Windows API bindings for Event Logs and Registry
+pywin32>=305; sys_platform == 'win32'
+
+# Optional: Offline registry hive parsing
+python-registry>=1.3.1; sys_platform == 'win32'
+
+# NTFS Master File Table (MFT) parsing and raw volume access
+# The Sleuth Kit Python bindings for forensic file system analysis
+# Note: Windows-only. Installation may fail on macOS/Linux (this is expected).
+# For demo/testing on non-Windows: Run demo_mft_analysis.py instead
+pytsk3>=20231007; sys_platform == 'win32'
+
+# ========================================
+# Document Processing (Optional)
+# ========================================
+# Required for PII Detection in documents and images
+
+# PDF document text extraction
+PyPDF2>=3.0.0
+
+# Microsoft Word document processing
+python-docx>=1.1.0
+
+# Microsoft Excel spreadsheet processing
+openpyxl>=3.1.0
+
+# Image processing library (for OCR)
+Pillow>=10.0.0
+
+# OCR (Optical Character Recognition) for text extraction from images
+# Note: Requires Tesseract-OCR binary installed separately
+#   Windows: https://github.com/UB-Mannheim/tesseract/wiki
+#   macOS: brew install tesseract
+#   Linux: sudo apt-get install tesseract-ocr
+pytesseract>=0.3.10
+
+# Video frame extraction and analysis (for video file scanning)
+opencv-python>=4.8.0
+
+# Data processing for Excel and CSV files
+pandas>=2.0.0
+
+# ========================================
+# Built-in Modules (No installation needed)
+# ========================================
+# The following are included with Python:
+# - sqlite3 (Browser history analysis)
+# - hashlib (File hashing: SHA256, MD5, SHA1)
+# - datetime (Timestamp handling)
+# - json (Configuration files)
+# - os, sys (Operating system interface)
+# - subprocess (Command execution)
+# - re (Regex pattern matching)
+# - pathlib (Path operations)
+# - collections (Data structures)
+# - shutil (File operations)
+
+# ========================================
+# Installation Instructions
+# ========================================
+#
+# Minimal Installation (Core features only):
+#   pip install requests
+#
+# Standard Installation (with document processing):
+#   pip install -r requirements.txt
+#
+# Windows (for full features including Registry/Event Logs):
+#   pip install -r requirements.txt
+#   python Scripts\pywin32_postinstall.py -install
+#
+# macOS/Linux (without Windows-only features):
+#   pip3 install requests PyPDF2 python-docx openpyxl Pillow pytesseract opencv-python pandas
+#
+# For Document Scanning (PII Detection in PDFs/Word/Excel/Images/Videos):
+#   pip install PyPDF2 python-docx openpyxl Pillow pytesseract opencv-python pandas
+#   # Also install Tesseract-OCR binary:
+#   # Windows: Download from https://github.com/UB-Mannheim/tesseract/wiki
+#   # macOS: brew install tesseract
+#   # Linux: sudo apt-get install tesseract-ocr
+#
+# Upgrade existing packages:
+#   pip install --upgrade -r requirements.txt
+#
+# Install in virtual environment:
+#   python -m venv venv
+#   source venv/bin/activate  # On Windows: venv\Scripts\activate
+#   pip install -r requirements.txt
+#
+# Verify installation:
+#   python check_dependencies.py
+#
+# ========================================
+# Platform-Specific Notes
+# ========================================
+#
+# WINDOWS:
+#   ✅ Full feature support
+#   ✅ Event Log analysis (requires pywin32)
+#   ✅ Registry analysis (requires pywin32)
+#   ✅ Browser history (Chrome, Edge, Brave)
+#   ⚠️  Must run as Administrator for full access
+#
+# macOS:
+#   ✅ Browser history (Chrome, Safari, Brave)
+#   ✅ Hash analysis
+#   ✅ PII detection
+#   ✅ IOC scanning
+#   ❌ Event Logs (Windows-only)
+#   ❌ Registry analysis (Windows-only)
+#   ⚠️  Safari requires "Full Disk Access" permission
+#
+# Linux:
+#   ✅ Browser history (Chrome, Firefox)
+#   ✅ Hash analysis
+#   ✅ PII detection
+#   ✅ IOC scanning
+#   ❌ Event Logs (Windows-only)
+#   ❌ Registry analysis (Windows-only)
+#   ⚠️  May require sudo for system access
+#
+# ========================================
+# Feature Dependencies
+# ========================================
+#
+# OS Commands Tab:
+#   - subprocess (built-in)
+#
+# Browser History Tab:
+#   - sqlite3 (built-in)
+#   - shutil (built-in)
+#
+# Hash Analysis Tab:
+#   - hashlib (built-in)
+#   - requests (VirusTotal API)
+#
+# PII Detection Tab:
+#   - re (built-in)
+#   - PyPDF2 (PDF scanning)
+#   - python-docx (Word document scanning)
+#   - openpyxl (Excel scanning)
+#   - Pillow + pytesseract (Image OCR)
+#   - opencv-python (Video frame extraction)
+#   - pandas (Data file processing)
+#
+# Registry Analysis Tab:
+#   - pywin32 (Windows only)
+#
+# Event Log Analysis Tab:
+#   - pywin32 (Windows only)
+#
+# IOC Scanner Tab:
+#   - re (built-in)
+#
+# Encrypted Files Tab:
+#   - os, pathlib (built-in)
+#
+# ========================================
+# Troubleshooting
+# ========================================
+#
+# Issue: "pywin32 module not found" on Windows
+#   Solution:
+#     pip uninstall pywin32
+#     pip install pywin32
+#     python Scripts\pywin32_postinstall.py -install
+#
+# Issue: Permission errors during installation
+#   Windows: Run Command Prompt as Administrator
+#   macOS/Linux: Use sudo pip3 install
+#
+# Issue: SSL certificate errors
+#   Solution:
+#     pip install --trusted-host pypi.org --trusted-host files.pythonhosted.org -r requirements.txt
+#
+# Issue: Outdated pip
+#   Solution:
+#     python -m pip install --upgrade pip
+#     pip install -r requirements.txt
+#
+# ========================================
+# Development Dependencies (Optional)
+# ========================================
+# Uncomment for development work:
+#
+# pytest>=7.4.0
+# pytest-cov>=4.1.0
+# black>=23.0.0
+# flake8>=6.0.0
+# mypy>=1.5.0
+#
+# ========================================
