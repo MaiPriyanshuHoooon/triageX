@@ -19,7 +19,7 @@ import os
 import sys
 from datetime import datetime
 
-from config.commands import COMMANDS, COMMAND_DESCRIPTIONS
+from config.commands import COMMANDS, COMMAND_DESCRIPTIONS, LINUX_COMMANDS, MACOS_COMMANDS
 from core.executor import execute, is_admin, run_as_admin
 from core.parsers import parse_to_table, escape_html, parse_regex_analysis_output, parse_hash_analysis_output
 from templates.html_generator import (
@@ -50,6 +50,64 @@ from core.registry_analyzer import RegistryAnalyzer
 from core.eventlog_analyzer import EventLogAnalyzer
 from core.mft_analyzer import MFTAnalyzer
 from core.pagefile_analyzer import PagefileAnalyzer
+
+
+def build_os_command_display(commands_dict, descriptions_dict, os_name="Linux"):
+    """
+    Build command display data for HTML report (without executing commands).
+    This creates the display structure showing what commands would run on each OS.
+    
+    Args:
+        commands_dict: Dictionary of commands organized by category (e.g., LINUX_COMMANDS)
+        descriptions_dict: Dictionary of command descriptions (COMMAND_DESCRIPTIONS)
+        os_name: Name of the OS for display purposes
+        
+    Returns:
+        Dictionary organized by category with command display data
+    """
+    os_results = {}
+    
+    for category, cmds in commands_dict.items():
+        # Skip analysis categories
+        if category in ['regex_analysis', 'hash_analysis']:
+            continue
+        
+        os_results[category] = []
+        
+        for cmd in cmds:
+            # Get user-friendly description or use a truncated command
+            cmd_description = descriptions_dict.get(cmd, cmd[:100] if len(cmd) > 100 else cmd)
+            
+            # Create display-only output (command reference, not execution)
+            cmd_preview = cmd[:200] + "..." if len(cmd) > 200 else cmd
+            output_html = f'''
+            <div class="command-reference">
+                <div class="command-info">
+                    <strong>Command:</strong>
+                    <pre class="command-code">{cmd_preview}</pre>
+                </div>
+                <div class="command-note">
+                    <em>This command would be executed on a {os_name} system.</em>
+                </div>
+            </div>
+            '''
+            
+            # Determine shell type based on command
+            if os_name == "Linux":
+                shell_type = "BASH"
+            elif os_name == "macOS":
+                shell_type = "ZSH"
+            else:
+                shell_type = "CMD"
+            
+            os_results[category].append({
+                'description': cmd_description,
+                'output': output_html,
+                'type': shell_type,
+                'success': True
+            })
+    
+    return os_results
 
 
 class ForensicCollector:
@@ -364,8 +422,17 @@ class ForensicCollector:
             }
             f.write(generate_dashboard_tab(stats, self.activity_log, {}))
             
+            # Build Linux and macOS command display data (for reference in the report)
+            linux_results = build_os_command_display(LINUX_COMMANDS, COMMAND_DESCRIPTIONS, "Linux")
+            macos_results = build_os_command_display(MACOS_COMMANDS, COMMAND_DESCRIPTIONS, "macOS")
+            
             # Generate OS Commands Tab
-            f.write(generate_os_commands_tab(self.os_results, "Windows"))
+            f.write(generate_os_commands_tab(
+                self.os_results, 
+                "Windows", 
+                linux_results=linux_results, 
+                macos_results=macos_results
+            ))
             
             # Generate Hash Analysis Tab
             f.write(generate_hash_tab_interactive(file_hashes))
@@ -868,8 +935,17 @@ def run_forensic_collection():
         }
         f.write(generate_dashboard_tab(stats, activity_log, {}))
 
+        # Build Linux and macOS command display data (for reference in the report)
+        linux_results = build_os_command_display(LINUX_COMMANDS, COMMAND_DESCRIPTIONS, "Linux")
+        macos_results = build_os_command_display(MACOS_COMMANDS, COMMAND_DESCRIPTIONS, "macOS")
+
         # Generate OS Commands Tab
-        f.write(generate_os_commands_tab(os_results, "Windows"))
+        f.write(generate_os_commands_tab(
+            os_results, 
+            "Windows",
+            linux_results=linux_results,
+            macos_results=macos_results
+        ))
 
         # Generate Hash Analysis Tab (NEW INTERACTIVE VERSION)
         f.write(generate_hash_tab_interactive(file_hashes if file_hashes else []))

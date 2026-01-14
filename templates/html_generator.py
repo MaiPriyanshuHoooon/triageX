@@ -591,17 +591,34 @@ def generate_activity_items(activity_list):
     return html
 
 
-def generate_os_commands_tab(os_results, os_type="Windows"):
+def generate_os_commands_tab(os_results, os_type="Windows", linux_results=None, macos_results=None):
     """
     Generate OS Commands tab with OS selector and command outputs
 
     Args:
-        os_results: Dictionary with command results organized by category
+        os_results: Dictionary with Windows command results organized by category
         os_type: Current OS type (Windows/Linux/macOS)
+        linux_results: Dictionary with Linux command results (optional)
+        macos_results: Dictionary with macOS command results (optional)
 
     Returns:
         HTML string for OS commands tab
     """
+    # Generate Windows commands section
+    windows_content = generate_os_command_sections(os_results) if os_results else '<div class="no-data">No Windows commands available</div>'
+    
+    # Generate Linux commands section
+    if linux_results:
+        linux_content = generate_os_command_sections(linux_results, shell_type="BASH")
+    else:
+        linux_content = '<div class="no-data">Linux commands not collected (run on a Linux system)</div>'
+    
+    # Generate macOS commands section
+    if macos_results:
+        macos_content = generate_os_command_sections(macos_results, shell_type="ZSH")
+    else:
+        macos_content = '<div class="no-data">macOS commands not collected (run on a macOS system)</div>'
+
     html = f'''
     <div id="tab-commands" class="tab-content">
         <div class="tab-header">
@@ -629,23 +646,27 @@ def generate_os_commands_tab(os_results, os_type="Windows"):
         </div>
 
         <div class="commands-content os-windows active">
-            {generate_os_command_sections(os_results)}
+            {windows_content}
         </div>
         <div class="commands-content os-linux">
-            <div class="no-data">Linux commands coming soon...</div>
+            {linux_content}
         </div>
         <div class="commands-content os-macos">
-            <div class="no-data">macOS commands coming soon...</div>
+            {macos_content}
         </div>
     </div>
     '''
     return html
 
 
-def generate_os_command_sections(os_results):
+def generate_os_command_sections(os_results, shell_type=None):
     """
     Generate command sections for OS commands tab
     Dynamically uses all categories present in os_results
+
+    Args:
+        os_results: Dictionary with command results organized by category
+        shell_type: Default shell type for badge display (e.g., 'BASH', 'ZSH', 'CMD', 'PS')
     """
     html = ''
 
@@ -671,7 +692,8 @@ def generate_os_command_sections(os_results):
             for cmd_result in os_results[category]:
                 description = cmd_result.get('description', 'No description')
                 output = cmd_result.get('output', 'No output')
-                cmd_type = cmd_result.get('type', 'CMD')
+                # Use provided shell_type or fallback to the type in the result
+                cmd_type = shell_type if shell_type else cmd_result.get('type', 'CMD')
 
                 html += f'''
                 <div class="command-card">

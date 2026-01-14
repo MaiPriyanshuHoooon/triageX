@@ -28,6 +28,7 @@ test_output/
 temp/
 tmp/
 tempCodeRunnerFile.py
+.pkl
 
 # License files (NEVER commit these!)
 *.lic
