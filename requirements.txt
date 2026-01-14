@@ -14,10 +14,13 @@ requests>=2.31.0
 # License management & encryption
 cryptography>=41.0.0
 
-# GUI Framework (for professional interface)
-PyQt5>=5.15.9
-PyQt5-Qt5>=5.15.2
-PyQt5-sip>=12.12.2
+# GUI Framework (for professional interface) - PyQt6
+PyQt6>=6.4.0
+PyQt6-Qt6>=6.4.0
+PyQt6-sip>=13.5.0
+
+# Live-reload development (optional, for development workflow)
+watchdog>=3.0.0
 
 # ========================================
 # Windows-Only Dependencies
