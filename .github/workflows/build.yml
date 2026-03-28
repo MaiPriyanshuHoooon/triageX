@@ -29,6 +29,8 @@ jobs:
   # ── Windows Build ──────────────────────────────────────────
   build-windows:
     runs-on: windows-latest
+    env:
+      PYTHONUTF8: "1"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

@@ -354,7 +354,7 @@ def build_macos(mode="onedir"):
 # ── Linux Build ───────────────────────────────────────────────────
 def build_linux(mode="onefile"):
     """Build Linux binary. Default to onefile for easy distribution."""
-    total = 5
+    total = 6
     step(1, total, "Preparing Linux build...")
 
     hidden = _hidden_imports("Linux")
@@ -413,7 +413,10 @@ def build_linux(mode="onefile"):
     step(4, total, "Creating .desktop launcher & AppDir...")
     create_linux_desktop(binary)
 
-    step(5, total, "Build complete!")
+    step(5, total, "Writing distribution README...")
+    write_readme("Linux", PROJECT_ROOT / "dist")
+
+    step(6, total, "Build complete!")
     print(f"\n  {C_GREEN}{'═'*50}")
     print(f"   Output: {binary}")
     print(f"   Run:    sudo ./{APP_NAME}")
