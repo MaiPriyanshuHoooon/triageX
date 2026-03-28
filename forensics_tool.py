@@ -1,11 +1,14 @@
 """
-Windows Forensics Tool - Modular Version
-========================================
+Cross-Platform Forensics Tool - Modular Version
+=================================================
 
 Main entry point for the forensic data collection tool.
+Supports Windows, Linux, and macOS with automatic OS detection.
+
 This version uses a modular structure with separated components:
-- config/commands.py: Command definitions
-- core/executor.py: Command execution logic
+- config/commands.py: Command definitions (Windows, Linux, macOS)
+- core/os_detector.py: OS detection and privilege checking
+- core/executor.py: Cross-platform command execution
 - core/parsers.py: Output parsing and table generation
 - templates/html_generator.py: HTML template generation
 - assets/styles.css: Stylesheet
@@ -19,8 +22,9 @@ import os
 import sys
 from datetime import datetime
 
-from config.commands import COMMANDS, COMMAND_DESCRIPTIONS, LINUX_COMMANDS, MACOS_COMMANDS
-from core.executor import execute, is_admin, run_as_admin
+from config.commands import COMMANDS, COMMAND_DESCRIPTIONS, LINUX_COMMANDS, MACOS_COMMANDS, WINDOWS_COMMANDS, get_commands_for_os
+from core.os_detector import detect_os, is_admin, run_as_admin, is_windows, is_linux, is_macos, get_os_info, get_shell_type, OS_WINDOWS, OS_LINUX, OS_MACOS
+from core.executor import execute
 from core.parsers import parse_to_table, escape_html, parse_regex_analysis_output, parse_hash_analysis_output
 from templates.html_generator import (
     generate_html_header,
@@ -56,28 +60,28 @@ def build_os_command_display(commands_dict, descriptions_dict, os_name="Linux"):
     """
     Build command display data for HTML report (without executing commands).
     This creates the display structure showing what commands would run on each OS.
-    
+
     Args:
         commands_dict: Dictionary of commands organized by category (e.g., LINUX_COMMANDS)
         descriptions_dict: Dictionary of command descriptions (COMMAND_DESCRIPTIONS)
         os_name: Name of the OS for display purposes
-        
+
     Returns:
         Dictionary organized by category with command display data
     """
     os_results = {}
-    
+
     for category, cmds in commands_dict.items():
         # Skip analysis categories
         if category in ['regex_analysis', 'hash_analysis']:
             continue
-        
+
         os_results[category] = []
-        
+
         for cmd in cmds:
             # Get user-friendly description or use a truncated command
             cmd_description = descriptions_dict.get(cmd, cmd[:100] if len(cmd) > 100 else cmd)
-            
+
             # Create display-only output (command reference, not execution)
             cmd_preview = cmd[:200] + "..." if len(cmd) > 200 else cmd
             output_html = f'''
@@ -91,7 +95,7 @@ def build_os_command_display(commands_dict, descriptions_dict, os_name="Linux"):
                 </div>
             </div>
             '''
-            
+
             # Determine shell type based on command
             if os_name == "Linux":
                 shell_type = "BASH"
@@ -99,14 +103,14 @@ def build_os_command_display(commands_dict, descriptions_dict, os_name="Linux"):
                 shell_type = "ZSH"
             else:
                 shell_type = "CMD"
-            
+
             os_results[category].append({
                 'description': cmd_description,
                 'output': output_html,
                 'type': shell_type,
                 'success': True
             })
-    
+
     return os_results
 
 
@@ -114,88 +118,106 @@ class ForensicCollector:
     """
     Forensic data collection class for GUI integration.
     Wraps the forensic collection functionality into a reusable class.
+    Cross-platform: auto-detects OS and runs appropriate commands.
     """
-    
+
     def __init__(self, output_dir):
         """
         Initialize the forensic collector.
-        
+
         Args:
             output_dir (str): Directory to store forensic output and reports
         """
         self.output_dir = output_dir
         self.timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        
+
+        # Detect OS at init time
+        self.current_os = detect_os()
+        self.os_info = get_os_info()
+        self.shell_type = get_shell_type()
+
+        # Get the correct command set for this OS
+        self.commands, self.os_name = get_commands_for_os(self.current_os)
+
         # Ensure output directory exists
         os.makedirs(output_dir, exist_ok=True)
-        
+
         # Initialize analyzers
         self.regex_analyzer = RegexAnalyzer()
         self.hash_analyzer = HashAnalyzer()
         self.ioc_scanner = IOCScanner()
         self.browser_analyzer = BrowserHistoryAnalyzer()
         self.eventlog_analyzer = EventLogAnalyzer()
-        
+
         # Storage for collected data
         self.all_forensic_data = []
         self.os_results = {}
         self.activity_log = []
-    
+
     def execute_all_commands(self):
         """
-        Execute all forensic commands and collect results.
-        
+        Execute all forensic commands for the detected OS and collect results.
+
         Returns:
             dict: Dictionary of command results organized by category
         """
+        # Use OS-specific commands (auto-detected in __init__)
+        commands_to_run = self.commands
+
         # Collect command results organized by category
-        for category, cmds in COMMANDS.items():
+        for category, cmds in commands_to_run.items():
             # Skip analysis categories - we'll process them separately
             if category in ['regex_analysis', 'hash_analysis']:
                 continue
-            
+
             self.os_results[category] = []
-            
+
             # Process each command in the category
             for cmd in cmds:
                 # Auto-detect and execute
                 output, cmd_type = execute(cmd)
-                
+
                 # Collect data for regex analysis
                 if output and output.strip() and not output.startswith("❌"):
                     self.all_forensic_data.append(f"\n=== {category.upper()} - {cmd[:80]} ===\n{output}\n")
-                
+
                 # Get user-friendly description or fallback to command
                 cmd_description = COMMAND_DESCRIPTIONS.get(cmd, cmd[:100])
-                
+
                 # Parse output to HTML table
                 if output and output.strip():
                     table_html = parse_to_table(output, cmd)
                 else:
                     table_html = '<p class="empty-output">No output or command failed</p>'
-                
+
+                # Map command type to display label
+                type_labels = {
+                    'powershell': 'PS', 'cmd': 'CMD',
+                    'bash': 'BASH', 'zsh': 'ZSH'
+                }
+
                 # Store result
                 self.os_results[category].append({
                     'description': cmd_description,
                     'output': table_html,
-                    'type': 'PS' if cmd_type == 'powershell' else 'CMD',
+                    'type': type_labels.get(cmd_type, self.shell_type),
                     'success': bool(output and output.strip() and not output.startswith("❌"))
                 })
-        
+
         # Perform Regex Analysis
         combined_forensic_text = "\n".join(self.all_forensic_data)
         regex_results = self.regex_analyzer.analyze_text(combined_forensic_text)
-        
+
         # Add to activity log
         self.activity_log.append({
             'type': 'regex analysis',
             'matches': len(regex_results['iocs'])
         })
-        
+
         # Perform Hash Analysis
         file_hashes = []
         evidence_dirs = self.hash_analyzer.get_common_evidence_directories()
-        
+
         if evidence_dirs:
             file_hashes = self.hash_analyzer.scan_multiple_directories(
                 evidence_dirs,
@@ -210,55 +232,55 @@ class ForensicCollector:
                 max_files=20,
                 extensions=['.py', '.txt', '.log', '.json']
             )
-        
+
         # Add to activity log
         self.activity_log.append({
             'type': 'hash analysis',
             'matches': len(file_hashes) if file_hashes else 0
         })
-        
+
         # Store results for report generation
         self.file_hashes = file_hashes
         self.regex_results = regex_results
-        
+
         return self.os_results
-    
+
     def scan_iocs(self):
         """
         Perform IOC (Indicators of Compromise) scanning.
-        
+
         Returns:
             dict: IOC scan results with threat assessment
-        
+
         Note: This method should be called after execute_all_commands() to scan collected data.
         """
         # Perform IOC Scan Analysis
         if not self.all_forensic_data:
             print("⚠️  Warning: No forensic data collected yet. Call execute_all_commands() first.")
-        
+
         combined_forensic_text = "\n".join(self.all_forensic_data)
         ioc_results = self.ioc_scanner.scan_text(combined_forensic_text)
-        
+
         # Add to activity log
         self.activity_log.append({
             'type': 'ioc scan analysis',
             'matches': ioc_results['total_iocs']
         })
-        
+
         # Store for report
         self.ioc_results = ioc_results
-        
+
         return ioc_results
-    
+
     def analyze_browser_history(self):
         """
         Analyze browser history from all detected browsers.
-        
+
         Returns:
             dict: Browser history data organized by browser
         """
         browser_history = {}
-        
+
         try:
             # Get 1 YEAR of history with NO LIMIT on entries
             browser_history = self.browser_analyzer.analyze_all_browsers(
@@ -266,73 +288,73 @@ class ForensicCollector:
                 days_back=365    # Last 1 year
             )
             browser_stats = self.browser_analyzer.get_statistics(browser_history)
-            
+
             # Add to activity log
             self.activity_log.append({
                 'type': 'browser history',
                 'matches': browser_stats.get('total_entries', 0)
             })
-            
+
             # Store for report
             self.browser_history = browser_history
             self.browser_stats = browser_stats
-            
+
         except Exception as e:
             # Log error and return empty structure
             print(f"⚠️  Browser history analysis error: {str(e)}")
             self.browser_history = {}
             self.browser_stats = {}
-        
+
         return browser_history
-    
+
     def analyze_event_logs(self):
         """
         Analyze Windows event logs for security events.
-        
+
         Returns:
             dict: Event log analysis data
         """
         eventlog_data = {}
-        
+
         try:
             # Analyze Windows event logs (last 7 days)
             events = self.eventlog_analyzer.analyze_event_logs(days_back=7, max_events_per_log=5000)
             eventlog_stats = self.eventlog_analyzer.get_statistics()
             eventlog_data = self.eventlog_analyzer.generate_report_data()
-            
+
             # Add to activity log
             self.activity_log.append({
                 'type': 'event log analysis',
                 'matches': eventlog_stats.get('total_events', 0)
             })
-            
+
             # Store for report
             self.eventlog_data = eventlog_data
             self.eventlog_stats = eventlog_stats
-            
+
         except Exception as e:
             # Log error and return empty structure
             print(f"⚠️  Event log analysis error: {str(e)}")
             self.eventlog_data = self.eventlog_analyzer.generate_report_data()
             self.eventlog_stats = self.eventlog_analyzer.get_statistics()
-        
+
         return eventlog_data
-    
+
     def generate_html_report(self, results, ioc_results, browser_results, eventlog_results):
         """
         Generate comprehensive HTML forensic report.
-        
+
         Args:
             results (dict): Command execution results
             ioc_results (dict): IOC scan results
             browser_results (dict): Browser history analysis
             eventlog_results (dict): Event log analysis
-            
+
         Returns:
             str: Path to generated HTML report
         """
         html_file = os.path.join(self.output_dir, f"forensic_report_{self.timestamp}.html")
-        
+
         # Ensure we have all required data - set defaults if methods weren't called
         if not hasattr(self, 'file_hashes'):
             print("⚠️  Warning: execute_all_commands() not called. Using empty hash results.")
@@ -344,7 +366,7 @@ class ForensicCollector:
             self.browser_stats = {}
         if not hasattr(self, 'eventlog_stats'):
             self.eventlog_stats = {}
-        
+
         # Perform additional analyses for comprehensive report
         # PII Detection
         pii_scanner = FileScanner()
@@ -356,12 +378,12 @@ class ForensicCollector:
                 dir_path = str(Path.home() / dir_name)
                 if os.path.exists(dir_path):
                     scan_dirs.append(dir_path)
-            
+
             if scan_dirs:
                 pii_results = pii_scanner.scan_specific_directories(scan_dirs, max_files_per_dir=25)
         except Exception:
             pass
-        
+
         # Encrypted Files Detection
         encrypted_scanner = EncryptedFileScanner()
         encrypted_data = {}
@@ -370,7 +392,7 @@ class ForensicCollector:
             encrypted_data = encrypted_scanner.generate_report_data()
         except Exception:
             encrypted_data = encrypted_scanner.generate_report_data()
-        
+
         # Registry Analysis
         registry_analyzer = RegistryAnalyzer()
         registry_data = {}
@@ -382,7 +404,7 @@ class ForensicCollector:
         except Exception:
             registry_data = registry_analyzer.generate_report_data()
             registry_stats = registry_analyzer.get_statistics()
-        
+
         # MFT Analysis
         mft_analyzer = MFTAnalyzer(volume_path="C:", scan_all_volumes=True)
         mft_data = {}
@@ -393,7 +415,7 @@ class ForensicCollector:
         except Exception:
             mft_data = mft_analyzer._get_unavailable_data()
             mft_stats = mft_analyzer.get_statistics()
-        
+
         # Pagefile Analysis
         pagefile_analyzer = PagefileAnalyzer()
         pagefile_data = {}
@@ -401,14 +423,14 @@ class ForensicCollector:
             pagefile_data = pagefile_analyzer.analyze()
         except Exception:
             pagefile_data = pagefile_analyzer._get_unavailable_data()
-        
+
         # Generate HTML report
         assets_path = ""  # Embedded inline
-        
+
         with open(html_file, "w", encoding="utf-8") as f:
-            # Write HTML header
-            f.write(generate_html_header(self.timestamp, assets_path))
-            
+            # Write HTML header with detected OS type
+            f.write(generate_html_header(self.timestamp, assets_path, os_type=self.current_os))
+
             # Generate Dashboard Tab
             # Calculate actual statistics from collected data
             file_hashes = getattr(self, 'file_hashes', [])
@@ -421,52 +443,68 @@ class ForensicCollector:
                 'timestamp': self.timestamp
             }
             f.write(generate_dashboard_tab(stats, self.activity_log, {}))
-            
-            # Build Linux and macOS command display data (for reference in the report)
-            linux_results = build_os_command_display(LINUX_COMMANDS, COMMAND_DESCRIPTIONS, "Linux")
-            macos_results = build_os_command_display(MACOS_COMMANDS, COMMAND_DESCRIPTIONS, "macOS")
-            
-            # Generate OS Commands Tab
+
+            # Build command display data for all OSes:
+            # - Current OS: real executed results (self.os_results)
+            # - Other OSes: reference-only display
+            if self.current_os == OS_WINDOWS:
+                windows_results = self.os_results
+                linux_results = build_os_command_display(LINUX_COMMANDS, COMMAND_DESCRIPTIONS, "Linux")
+                macos_results = build_os_command_display(MACOS_COMMANDS, COMMAND_DESCRIPTIONS, "macOS")
+            elif self.current_os == OS_LINUX:
+                windows_results = build_os_command_display(WINDOWS_COMMANDS, COMMAND_DESCRIPTIONS, "Windows")
+                linux_results = self.os_results
+                macos_results = build_os_command_display(MACOS_COMMANDS, COMMAND_DESCRIPTIONS, "macOS")
+            elif self.current_os == OS_MACOS:
+                windows_results = build_os_command_display(WINDOWS_COMMANDS, COMMAND_DESCRIPTIONS, "Windows")
+                linux_results = build_os_command_display(LINUX_COMMANDS, COMMAND_DESCRIPTIONS, "Linux")
+                macos_results = self.os_results
+            else:
+                windows_results = self.os_results
+                linux_results = build_os_command_display(LINUX_COMMANDS, COMMAND_DESCRIPTIONS, "Linux")
+                macos_results = build_os_command_display(MACOS_COMMANDS, COMMAND_DESCRIPTIONS, "macOS")
+
+            # Generate OS Commands Tab — auto-highlights current OS
             f.write(generate_os_commands_tab(
-                self.os_results, 
-                "Windows", 
-                linux_results=linux_results, 
+                windows_results,
+                self.current_os,
+                linux_results=linux_results,
                 macos_results=macos_results
             ))
-            
+
             # Generate Hash Analysis Tab
             f.write(generate_hash_tab_interactive(file_hashes))
-            
+
             # Generate PII Detection Tab
             f.write(generate_pii_tab(pii_results))
-            
+
             # Generate Browser History Tab
             browser_stats = getattr(self, 'browser_stats', {})
             f.write(generate_browser_history_tab(browser_results, browser_stats))
-            
+
             # Generate Registry Analysis Tab
             f.write(generate_registry_tab(registry_data, registry_stats))
-            
+
             # Generate Event Log Analysis Tab
             eventlog_stats = getattr(self, 'eventlog_stats', {})
             f.write(generate_eventlog_tab(eventlog_results, eventlog_stats))
-            
+
             # Generate MFT Analysis Tab
             f.write(generate_mft_tab(mft_data, mft_stats))
-            
+
             # Generate Pagefile Analysis Tab
             f.write(generate_pagefile_tab(pagefile_data))
-            
+
             # Generate Encrypted Files Tab
             f.write(generate_encrypted_files_tab(encrypted_data))
-            
+
             # Generate Regex Analysis Tab
             f.write(f'    <div id="tab-regex" class="tab-content">\n')
             f.write(f'        <div class="tab-header">\n')
             f.write(f'            <h1>Regex Pattern Analysis</h1>\n')
             f.write(f'        </div>\n')
             f.write(f'        <div class="card">\n')
-            
+
             # Generate threat dashboard if critical threats found
             if self.regex_results['threat_score'] > 50:
                 threat_data = {
@@ -479,37 +517,48 @@ class ForensicCollector:
                     'files_hashed': len(self.file_hashes) if self.file_hashes else 0
                 }
                 f.write(generate_threat_dashboard(threat_data))
-            
+
             regex_html = self.regex_analyzer.generate_report(self.regex_results)
             f.write(regex_html)
             f.write(f'        </div>\n')
             f.write(f'    </div>\n\n')
-            
+
             # Generate IOC Scanner Tab
             f.write(generate_ioc_scanner_tab(ioc_results))
-            
+
             # Write HTML footer
             f.write(generate_html_footer(assets_path))
-        
+
         return html_file
 
 
 def run_forensic_collection():
-    """Main function to collect forensic data and generate HTML report"""
+    """Main function to collect forensic data and generate HTML report — cross-platform"""
 
-    # Check admin status
-    if sys.platform == 'win32':
-        if is_admin():
-            print("✅ Running with Administrator privileges")
+    # Detect OS
+    current_os = detect_os()
+    os_info = get_os_info()
+    shell_type = get_shell_type()
+    native_commands, os_name = get_commands_for_os(current_os)
+
+    print(f"🖥️  Detected OS: {current_os}")
+    print(f"🐚 Shell type: {shell_type}")
+
+    # Check admin/root status (cross-platform)
+    if is_admin():
+        print("✅ Running with elevated privileges")
+    else:
+        print("⚠️  WARNING: Not running with elevated privileges")
+        if is_windows():
+            print("   Run as Administrator for full forensic data.")
         else:
-            print("⚠️  WARNING: Not running as Administrator")
-            print("   Some commands may fail or produce incomplete results.")
-            print("   For full forensic data, run this script as Administrator.\n")
+            print(f"   Run with: sudo python3 {sys.argv[0]}")
+        print("   Some commands may fail or produce incomplete results.\n")
 
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     html_file = f"forensic_report_{timestamp}.html"
 
-    print(f"📊 Generating HTML forensic report...")
+    print(f"\n📊 Generating HTML forensic report...")
     print(f"📁 Saving to: {html_file}")
     print(f"🤖 Auto-detecting command types...\n")
 
@@ -526,8 +575,8 @@ def run_forensic_collection():
     os_results = {}
     activity_log = []
 
-    # First, collect all command results
-    for category, cmds in COMMANDS.items():
+    # Execute commands for the DETECTED OS
+    for category, cmds in native_commands.items():
         # Skip analysis categories - we'll process them separately
         if category in ['regex_analysis', 'hash_analysis']:
             continue
@@ -556,11 +605,17 @@ def run_forensic_collection():
             else:
                 table_html = '<p class="empty-output">No output or command failed</p>'
 
+            # Map command type to display label
+            type_labels = {
+                'powershell': 'PS', 'cmd': 'CMD',
+                'bash': 'BASH', 'zsh': 'ZSH'
+            }
+
             # Store result for new UI
             os_results[category].append({
                 'description': cmd_description,
                 'output': table_html,
-                'type': 'PS' if cmd_type == 'powershell' else 'CMD',
+                'type': type_labels.get(cmd_type, shell_type),
                 'success': bool(output and output.strip() and not output.startswith("❌"))
             })
 
@@ -922,27 +977,43 @@ def run_forensic_collection():
 
     # Now generate the modern HTML report
     with open(html_file, "w", encoding="utf-8") as f:
-        # Write HTML header with modern UI
-        f.write(generate_html_header(timestamp, assets_path))
+        # Write HTML header with modern UI — pass detected OS
+        f.write(generate_html_header(timestamp, assets_path, os_type=current_os))
 
         # Generate Dashboard Tab
         stats = {
-            'total_cases': 3,
-            'active_cases': 3,
+            'total_cases': len(os_results),
+            'active_cases': len(os_results),
             'evidence_items': 0,
             'analysis_logs': len(activity_log),
             'timestamp': timestamp
         }
         f.write(generate_dashboard_tab(stats, activity_log, {}))
 
-        # Build Linux and macOS command display data (for reference in the report)
-        linux_results = build_os_command_display(LINUX_COMMANDS, COMMAND_DESCRIPTIONS, "Linux")
-        macos_results = build_os_command_display(MACOS_COMMANDS, COMMAND_DESCRIPTIONS, "macOS")
+        # Build command display data for all OSes:
+        # - Current OS: real executed results
+        # - Other OSes: reference-only display
+        if current_os == OS_WINDOWS:
+            windows_results = os_results
+            linux_results = build_os_command_display(LINUX_COMMANDS, COMMAND_DESCRIPTIONS, "Linux")
+            macos_results = build_os_command_display(MACOS_COMMANDS, COMMAND_DESCRIPTIONS, "macOS")
+        elif current_os == OS_LINUX:
+            windows_results = build_os_command_display(WINDOWS_COMMANDS, COMMAND_DESCRIPTIONS, "Windows")
+            linux_results = os_results
+            macos_results = build_os_command_display(MACOS_COMMANDS, COMMAND_DESCRIPTIONS, "macOS")
+        elif current_os == OS_MACOS:
+            windows_results = build_os_command_display(WINDOWS_COMMANDS, COMMAND_DESCRIPTIONS, "Windows")
+            linux_results = build_os_command_display(LINUX_COMMANDS, COMMAND_DESCRIPTIONS, "Linux")
+            macos_results = os_results
+        else:
+            windows_results = os_results
+            linux_results = build_os_command_display(LINUX_COMMANDS, COMMAND_DESCRIPTIONS, "Linux")
+            macos_results = build_os_command_display(MACOS_COMMANDS, COMMAND_DESCRIPTIONS, "macOS")
 
-        # Generate OS Commands Tab
+        # Generate OS Commands Tab — auto-highlights current OS
         f.write(generate_os_commands_tab(
-            os_results, 
-            "Windows",
+            windows_results,
+            current_os,
             linux_results=linux_results,
             macos_results=macos_results
         ))
@@ -1008,10 +1079,10 @@ def run_forensic_collection():
     print(f"🎨 Features:")
     print(f"   • Dark professional theme")
     print(f"   • Tab-based navigation (Dashboard/Commands/Hash/PII/Regex/IOC)")
-    print(f"   • OS selector (Windows/Linux/macOS)")
+    print(f"   • OS selector (Windows/Linux/macOS) — {current_os} auto-selected")
     print(f"   • Interactive cards and search")
     print(f"   • Real-time stats and activity feed")
-    print(f"\n� Report includes:")
+    print(f"\n📋 Report includes:")
     print(f"   • {len(all_forensic_data)} forensic command results")
     print(f"   • {len(regex_results['iocs'])} IOCs detected")
     print(f"   • {len(file_hashes) if file_hashes else 0} files analyzed")
@@ -1019,9 +1090,10 @@ def run_forensic_collection():
 
 
 if __name__ == "__main__":
-    # Check if running on Windows
-    if sys.platform == 'win32':
-        # If not admin, offer to elevate
+    detected = detect_os()
+
+    if detected == OS_WINDOWS:
+        # Windows: offer UAC elevation
         if not is_admin():
             print("=" * 60)
             print("🔒 ADMINISTRATOR PRIVILEGES REQUIRED")
@@ -1045,5 +1117,20 @@ if __name__ == "__main__":
             else:
                 print("\n⚠️  Continuing without Administrator privileges...")
                 print("   Some commands may fail.\n")
+    else:
+        # Linux / macOS
+        if not is_admin():
+            print("=" * 60)
+            print(f"🔒 ROOT PRIVILEGES RECOMMENDED ({detected})")
+            print("=" * 60)
+            print("\nSome forensic commands require root/sudo for:")
+            print("  • Full process listing")
+            print("  • Network connection details")
+            print("  • USB device history")
+            print("  • System log access")
+            print(f"\nRe-run with: sudo python3 {sys.argv[0]}")
+            print("=" * 60)
+            print("\n⚠️  Continuing without root privileges...")
+            print("   Some commands may produce incomplete results.\n")
 
     run_forensic_collection()

@@ -1,12 +1,11 @@
 """
-Main Window for Windows Forensic Triage Tool
-Loads UI from main_window.ui and handles forensic operations
+Main Window for Forensic Triage Tool
+Cross-platform: loads UI from main_window.ui and handles forensic operations
 """
 
 import os
 import sys
 import webbrowser
-import ctypes
 from datetime import datetime
 
 from PyQt6.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QApplication
@@ -17,14 +16,7 @@ from PyQt6 import uic
 from license_manager import LicenseManager
 from .forensic_worker import ForensicWorker
 from .license_dialog import LicenseActivationDialog
-
-
-def is_admin():
-    """Check if the application is running with administrator privileges"""
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
-    except:
-        return False
+from core.os_detector import detect_os, is_admin, get_os_info
 
 
 class ForensicToolGUI(QMainWindow):
@@ -36,6 +28,8 @@ class ForensicToolGUI(QMainWindow):
         self.worker = None
         self.report_path = None
         self.license_info = None
+        self.current_os = detect_os()
+        self.os_info = get_os_info()
 
         # Check license first
         if not self.check_license():
@@ -126,22 +120,27 @@ class ForensicToolGUI(QMainWindow):
     def initialize_log(self):
         """Initialize activity log with welcome message"""
         self.log_message("=" * 60)
-        self.log_message("🛡️  Windows Forensic Triage Tool - Professional Edition")
+        self.log_message(f"🛡️  Forensic Triage Tool - Professional Edition ({self.current_os})")
         self.log_message("=" * 60)
         self.log_message(f"License Type: {self.license_info['license_type'].upper()}")
         self.log_message(f"Device ID: {self.license_info['device_id'][:30]}...")
         if self.license_info.get('expiration_date'):
             self.log_message(f"Expires: {self.license_info['expiration_date']}")
+        self.log_message(f"Detected OS: {self.current_os}")
         self.log_message("=" * 60)
 
-        # Check admin privileges
+        # Check admin/root privileges (cross-platform)
         if is_admin():
-            self.log_message("✅ Running with Administrator privileges")
-            self.log_message("   → Full forensic access enabled (MFT, Pagefile, Registry)")
+            self.log_message("✅ Running with elevated privileges")
+            self.log_message("   → Full forensic access enabled")
         else:
-            self.log_message("⚠️  NOT running as Administrator")
-            self.log_message("   → Some features may be limited (MFT, Pagefile analysis)")
-            self.log_message("   → Right-click and 'Run as Administrator' for full access")
+            self.log_message("⚠️  NOT running with elevated privileges")
+            if self.current_os == "Windows":
+                self.log_message("   → Some features may be limited (MFT, Pagefile, Registry)")
+                self.log_message("   → Right-click and 'Run as Administrator' for full access")
+            else:
+                self.log_message("   → Some features may be limited (system logs, process details)")
+                self.log_message(f"   → Re-run with: sudo python3 {sys.argv[0]}")
 
         self.log_message("")
 
@@ -163,22 +162,39 @@ class ForensicToolGUI(QMainWindow):
             QMessageBox.warning(self, "Already Running", "Forensic collection is already running!")
             return
 
-        # Check admin privileges and warn if not admin
+        # Check admin/root privileges and warn if not elevated
         if not is_admin():
+            if self.current_os == "Windows":
+                warn_text = (
+                    "⚠️  Not running as Administrator!\n\n"
+                    "Some features will be limited:\n"
+                    "  • MFT (Master File Table) analysis\n"
+                    "  • Pagefile.sys analysis\n"
+                    "  • Some registry keys\n"
+                    "  • Low-level disk access\n\n"
+                    "For complete forensic data collection:\n"
+                    "  → Close this application\n"
+                    "  → Right-click the EXE\n"
+                    "  → Select 'Run as Administrator'\n\n"
+                    "Continue with limited access?"
+                )
+            else:
+                warn_text = (
+                    f"⚠️  Not running as root ({self.current_os})!\n\n"
+                    "Some features will be limited:\n"
+                    "  • System log access\n"
+                    "  • Full process listing\n"
+                    "  • Network connection details\n"
+                    "  • USB device history\n\n"
+                    f"For complete forensic data:\n"
+                    f"  → Re-run with: sudo python3 {sys.argv[0]}\n\n"
+                    "Continue with limited access?"
+                )
+
             result = QMessageBox.warning(
                 self,
-                "Administrator Privileges Required",
-                "⚠️  Not running as Administrator!\n\n"
-                "Some features will be limited:\n"
-                "  • MFT (Master File Table) analysis\n"
-                "  • Pagefile.sys analysis\n"
-                "  • Some registry keys\n"
-                "  • Low-level disk access\n\n"
-                "For complete forensic data collection:\n"
-                "  → Close this application\n"
-                "  → Right-click the EXE\n"
-                "  → Select 'Run as Administrator'\n\n"
-                "Continue with limited access?",
+                "Elevated Privileges Required",
+                warn_text,
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No
             )

@@ -1,9 +1,11 @@
 """
 Background worker thread for forensic collection
+Cross-platform: auto-detects OS and runs appropriate commands
 """
 
 from PyQt6.QtCore import QThread, pyqtSignal
 from forensics_tool import ForensicCollector
+from core.os_detector import detect_os, is_windows
 
 
 class ForensicWorker(QThread):
@@ -21,16 +23,18 @@ class ForensicWorker(QThread):
     def run(self):
         """Run forensic collection in background"""
         try:
-            self.log_message.emit("🔍 Starting forensic triage collection...")
+            current_os = detect_os()
+
+            self.log_message.emit(f"🔍 Starting forensic triage collection ({current_os})...")
             self.progress.emit(10)
 
-            # Initialize collector
+            # Initialize collector (auto-detects OS)
             collector = ForensicCollector(output_dir=self.output_dir)
-            self.log_message.emit("✅ Forensic collector initialized")
+            self.log_message.emit(f"✅ Forensic collector initialized for {collector.os_name}")
             self.progress.emit(20)
 
-            # Execute commands
-            self.log_message.emit("📋 Executing Windows forensic commands...")
+            # Execute commands for detected OS
+            self.log_message.emit(f"📋 Executing {collector.os_name} forensic commands...")
             self.progress.emit(30)
             self.log_message.emit("   → Collecting system information...")
             self.progress.emit(35)
@@ -40,7 +44,7 @@ class ForensicWorker(QThread):
             self.progress.emit(45)
 
             results = collector.execute_all_commands()
-            self.log_message.emit(f"✅ Collected {len(results)} command results")
+            self.log_message.emit(f"✅ Collected {len(results)} command categories")
             self.progress.emit(50)
 
             # Analyze IOCs
@@ -56,7 +60,7 @@ class ForensicWorker(QThread):
             # Analyze browser history
             self.log_message.emit("🌐 Analyzing browser history...")
             self.progress.emit(65)
-            self.log_message.emit("   → Scanning Chrome, Firefox, Edge databases...")
+            self.log_message.emit("   → Scanning Chrome, Firefox, Edge/Safari databases...")
             self.progress.emit(68)
 
             browser_results = collector.analyze_browser_history()
@@ -69,12 +73,15 @@ class ForensicWorker(QThread):
             self.log_message.emit("   → Computing file hashes (MD5, SHA1, SHA256)...")
             self.progress.emit(75)
 
-            # Scan event logs
-            self.log_message.emit("📊 Scanning Windows Event Logs...")
+            # Scan event logs (OS-aware label)
+            if is_windows():
+                self.log_message.emit("📊 Scanning Windows Event Logs...")
+            else:
+                self.log_message.emit("📊 Scanning system logs...")
             self.progress.emit(78)
 
             eventlog_results = collector.analyze_event_logs()
-            self.log_message.emit(f"✅ Event log analysis complete: {len(eventlog_results)} events analyzed")
+            self.log_message.emit(f"✅ Log analysis complete: {len(eventlog_results)} events analyzed")
             self.progress.emit(82)
 
             # Scan for PII (Personally Identifiable Information)
@@ -84,27 +91,33 @@ class ForensicWorker(QThread):
             self.progress.emit(85)
 
             # Scan for encrypted files
-            self.log_message.emit("🔐 Detecting encrypted files across drives...")
+            self.log_message.emit("🔐 Detecting encrypted files...")
             self.progress.emit(86)
             self.log_message.emit("   → Scanning user directories for encrypted content...")
             self.progress.emit(87)
 
-            # Registry analysis
-            self.log_message.emit("📝 Analyzing Windows Registry...")
-            self.progress.emit(88)
-            self.log_message.emit("   → Extracting startup programs, installed software, USB history...")
+            # Registry / System config analysis (OS-aware)
+            if is_windows():
+                self.log_message.emit("📝 Analyzing Windows Registry...")
+                self.log_message.emit("   → Extracting startup programs, installed software, USB history...")
+            else:
+                self.log_message.emit("📝 Analyzing system configuration...")
+                self.log_message.emit("   → Checking startup services, installed packages...")
             self.progress.emit(89)
 
-            # MFT analysis
-            self.log_message.emit("💾 Analyzing Master File Table (MFT)...")
-            self.progress.emit(90)
-            self.log_message.emit("   → Scanning all volumes for file system metadata...")
+            # MFT / Filesystem analysis (OS-aware)
+            if is_windows():
+                self.log_message.emit("💾 Analyzing Master File Table (MFT)...")
+                self.log_message.emit("   → Scanning all volumes for file system metadata...")
+            else:
+                self.log_message.emit("💾 Analyzing filesystem metadata...")
             self.progress.emit(91)
 
-            # Pagefile analysis
-            self.log_message.emit("📄 Analyzing pagefile and memory artifacts...")
-            self.progress.emit(92)
-            self.log_message.emit("   → Extracting data from pagefile.sys...")
+            # Pagefile / Swap analysis (OS-aware)
+            if is_windows():
+                self.log_message.emit("📄 Analyzing pagefile and memory artifacts...")
+            else:
+                self.log_message.emit("📄 Analyzing swap/memory artifacts...")
             self.progress.emit(93)
 
             # Generate report

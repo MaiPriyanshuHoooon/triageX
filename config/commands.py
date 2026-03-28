@@ -4,6 +4,8 @@ Commands Configuration
 All forensic commands organized by category for Windows, Linux, and macOS
 """
 
+import sys
+
 # ========================================
 # WINDOWS COMMANDS
 # ========================================
@@ -350,6 +352,35 @@ MACOS_COMMANDS = {
 
 # Backward compatibility - defaults to Windows
 COMMANDS = WINDOWS_COMMANDS
+
+
+def get_commands_for_os(os_type=None):
+    """
+    Return the correct command set for the given (or detected) OS.
+
+    Args:
+        os_type: "Windows", "Linux", "macOS", or None (auto-detect)
+
+    Returns:
+        Tuple of (commands_dict, os_name_str)
+    """
+    if os_type is None:
+        # Auto-detect
+        if sys.platform == 'win32':
+            os_type = "Windows"
+        elif sys.platform == 'darwin':
+            os_type = "macOS"
+        elif sys.platform.startswith('linux'):
+            os_type = "Linux"
+        else:
+            os_type = "Windows"  # fallback
+
+    if os_type == "Linux":
+        return LINUX_COMMANDS, "Linux"
+    elif os_type == "macOS":
+        return MACOS_COMMANDS, "macOS"
+    else:
+        return WINDOWS_COMMANDS, "Windows"
 
 
 # ========================================

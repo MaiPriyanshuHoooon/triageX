@@ -1,26 +1,27 @@
 """
 Command Executor Module
 =======================
-Handles execution of CMD and PowerShell commands
+Cross-platform command execution for Windows, Linux, and macOS.
+Auto-detects OS and routes commands to the correct shell.
 """
 
 import subprocess
 import re
 import sys
-import ctypes
 import os
 from config.commands import POWERSHELL_INDICATORS
+from core.os_detector import detect_os, is_windows, is_linux, is_macos, is_admin, run_as_admin, OS_WINDOWS, OS_LINUX, OS_MACOS
 
 
 def detect_command_type(cmd):
     """
-    Automatically detect if a command is PowerShell, CMD, or Analysis
+    Automatically detect if a command is PowerShell, CMD, Bash, Zsh, or Analysis.
 
     Args:
         cmd: Command string
 
     Returns:
-        "powershell", "cmd", "regex_analysis", or "hash_analysis"
+        "powershell", "cmd", "bash", "zsh", "regex_analysis", or "hash_analysis"
     """
     # Check for analysis commands (not shell commands)
     if cmd.startswith("ANALYZE_") or cmd.startswith("HASH_"):
@@ -29,6 +30,17 @@ def detect_command_type(cmd):
         elif "HASH" in cmd:
             return "hash_analysis"
 
+    current_os = detect_os()
+
+    # On Linux → always bash
+    if current_os == OS_LINUX:
+        return "bash"
+
+    # On macOS → always zsh
+    if current_os == OS_MACOS:
+        return "zsh"
+
+    # On Windows → detect PowerShell vs CMD
     cmd_lower = cmd.lower()
 
     # Check for PowerShell indicators
@@ -44,83 +56,39 @@ def detect_command_type(cmd):
     if '|' in cmd and any(x in cmd for x in ['Get-', 'Set-', 'Where-', 'Select-']):
         return "powershell"
 
-    # Default to CMD
+    # Default to CMD on Windows
     return "cmd"
 
 
-def is_admin():
-    """Check if script is running with administrator privileges (Windows only)"""
-    try:
-        return ctypes.windll.shell32.IsUserAnAdmin()
-    except:
-        return False
-
-
-def run_as_admin():
-    """Restart the script with administrator privileges (Windows only)"""
-    try:
-        if sys.platform == 'win32':
-            # Get the path to the Python executable and script
-            script = os.path.abspath(sys.argv[0])
-
-            # Build parameters: pass the script as the first argument
-            params = f'"{script}"'
-
-            # Request UAC elevation - Run Python with the script as parameter
-            ret = ctypes.windll.shell32.ShellExecuteW(
-                None,           # hwnd (parent window)
-                "runas",        # Operation (run as admin)
-                sys.executable, # Python executable path
-                params,         # Parameters (script path)
-                None,           # Working directory (use current)
-                1               # SW_SHOWNORMAL (show window)
-            )
-
-            # ShellExecuteW returns > 32 if successful
-            if ret > 32:
-                sys.exit(0)  # Exit current process
-            else:
-                print(f"❌ Failed to elevate privileges (Error Code: {ret})")
-                print("Please run this script as Administrator manually:")
-                print(f"  1. Right-click on this file: {script}")
-                print("  2. Select 'Run as Administrator'")
-                input("\nPress ENTER to continue without admin privileges...")
-    except Exception as e:
-        print(f"❌ Failed to elevate privileges: {e}")
-        print("Please run this script as Administrator manually.")
-        input("Press ENTER to continue without admin privileges...")
-
-
 def execute_cmd(cmd):
-    """Execute Command Prompt (cmd.exe) commands"""
+    """Execute Command Prompt (cmd.exe) commands — Windows only"""
     try:
-        # Windows-specific: CREATE_NO_WINDOW flag to prevent console popup
         creation_flags = 0
         if sys.platform == 'win32':
             creation_flags = subprocess.CREATE_NO_WINDOW
-        
-        return subprocess.check_output(
-            cmd, 
-            shell=True, 
-            text=True, 
+
+        kwargs = dict(
+            shell=True,
+            text=True,
             stderr=subprocess.STDOUT,
-            creationflags=creation_flags  # No timeout - runs until complete
         )
+        # creationflags is Windows-only
+        if sys.platform == 'win32':
+            kwargs['creationflags'] = creation_flags
+
+        return subprocess.check_output(cmd, **kwargs)
     except subprocess.CalledProcessError as e:
-        # More detailed error message
         error_msg = f"❌ Command failed (Error Code: {e.returncode})"
         if e.output:
-            # Include the actual error output
-            error_msg += f"\n\nError Details:\n{e.output[:500]}"  # First 500 chars
+            error_msg += f"\n\nError Details:\n{e.output[:500]}"
         return error_msg
     except Exception as e:
         return f"❌ Error: {str(e)}"
 
 
 def execute_powershell(cmd):
-    """Execute PowerShell commands"""
+    """Execute PowerShell commands — Windows only"""
     try:
-        # Windows-specific: CREATE_NO_WINDOW flag to prevent console popup
         creation_flags = 0
         if sys.platform == 'win32':
             creation_flags = subprocess.CREATE_NO_WINDOW
@@ -133,19 +101,19 @@ def execute_powershell(cmd):
             '-Command', cmd
         ]
 
-        result = subprocess.check_output(
-            powershell_cmd,
+        kwargs = dict(
             text=True,
             stderr=subprocess.STDOUT,
-            creationflags=creation_flags    # No timeout - runs until complete
         )
+        if sys.platform == 'win32':
+            kwargs['creationflags'] = creation_flags
+
+        result = subprocess.check_output(powershell_cmd, **kwargs)
         return result
     except subprocess.CalledProcessError as e:
-        # More detailed error message
         error_msg = f"❌ PowerShell command failed (Error Code: {e.returncode})"
         if e.output:
-            # Include the actual error output from PowerShell
-            error_msg += f"\n\nError Details:\n{e.output[:500]}"  # First 500 chars
+            error_msg += f"\n\nError Details:\n{e.output[:500]}"
         return error_msg
     except FileNotFoundError:
         return "❌ PowerShell not found on this system (Windows only)"
@@ -153,9 +121,76 @@ def execute_powershell(cmd):
         return f"❌ Error: {str(e)}"
 
 
+def execute_bash(cmd):
+    """Execute Bash shell commands — Linux"""
+    try:
+        result = subprocess.check_output(
+            ['bash', '-c', cmd],
+            text=True,
+            stderr=subprocess.STDOUT,
+            timeout=120  # 2 minute timeout per command
+        )
+        return result
+    except subprocess.CalledProcessError as e:
+        error_msg = f"❌ Bash command failed (Error Code: {e.returncode})"
+        if e.output:
+            error_msg += f"\n\nError Details:\n{e.output[:500]}"
+        return error_msg
+    except subprocess.TimeoutExpired:
+        return "❌ Command timed out (120s limit)"
+    except FileNotFoundError:
+        # Fallback to sh if bash not available
+        try:
+            result = subprocess.check_output(
+                ['sh', '-c', cmd],
+                text=True,
+                stderr=subprocess.STDOUT,
+                timeout=120
+            )
+            return result
+        except Exception as e:
+            return f"❌ Shell not found: {str(e)}"
+    except Exception as e:
+        return f"❌ Error: {str(e)}"
+
+
+def execute_zsh(cmd):
+    """Execute Zsh shell commands — macOS"""
+    try:
+        result = subprocess.check_output(
+            ['zsh', '-c', cmd],
+            text=True,
+            stderr=subprocess.STDOUT,
+            timeout=120  # 2 minute timeout per command
+        )
+        return result
+    except subprocess.CalledProcessError as e:
+        error_msg = f"❌ Zsh command failed (Error Code: {e.returncode})"
+        if e.output:
+            error_msg += f"\n\nError Details:\n{e.output[:500]}"
+        return error_msg
+    except subprocess.TimeoutExpired:
+        return "❌ Command timed out (120s limit)"
+    except FileNotFoundError:
+        # Fallback to bash if zsh not available
+        try:
+            result = subprocess.check_output(
+                ['bash', '-c', cmd],
+                text=True,
+                stderr=subprocess.STDOUT,
+                timeout=120
+            )
+            return result
+        except Exception as e:
+            return f"❌ Shell not found: {str(e)}"
+    except Exception as e:
+        return f"❌ Error: {str(e)}"
+
+
 def execute(cmd):
     """
-    Automatically detect command type and execute
+    Automatically detect command type and execute on the correct shell.
+    Cross-platform: routes to PowerShell/CMD on Windows, Bash on Linux, Zsh on macOS.
 
     Args:
         cmd: Command string
@@ -169,6 +204,10 @@ def execute(cmd):
     # Execute based on detected type
     if cmd_type == 'powershell':
         output = execute_powershell(cmd)
+    elif cmd_type == 'bash':
+        output = execute_bash(cmd)
+    elif cmd_type == 'zsh':
+        output = execute_zsh(cmd)
     elif cmd_type == 'regex_analysis':
         output = f"REGEX_ANALYSIS:{cmd}"  # Placeholder - handled by main tool
     elif cmd_type == 'hash_analysis':
