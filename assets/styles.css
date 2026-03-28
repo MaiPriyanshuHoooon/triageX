@@ -249,21 +249,25 @@ body::before {
     /* position: sticky; */
     display: flex;
     gap: 0.25rem;
+    width: 100%;
 }
 
 .tab-btn {
-    padding: 0.75rem 1rem;
+    padding: 0.85rem 1.25rem;
     background: transparent;
     border: none;
     border-bottom: 2px solid transparent;
     color: var(--text-secondary);
-    font-size: 0.875rem;
+    font-size: 0.9375rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
+    flex: 1;
+    white-space: nowrap;
 }
 
 .tab-btn:hover {
@@ -866,6 +870,11 @@ body::before {
 
     .tab-container {
         overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+
+    .tab-btn {
+        flex: none;
     }
 
     .stats-grid {

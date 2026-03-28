@@ -482,18 +482,21 @@ class ForensicCollector:
             browser_stats = getattr(self, 'browser_stats', {})
             f.write(generate_browser_history_tab(browser_results, browser_stats))
 
-            # Generate Registry Analysis Tab
-            f.write(generate_registry_tab(registry_data, registry_stats))
+            # Windows-only tabs: Registry, Event Logs, MFT, Pagefile
+            # Only include these tabs when running on Windows
+            if self.current_os == OS_WINDOWS:
+                # Generate Registry Analysis Tab
+                f.write(generate_registry_tab(registry_data, registry_stats))
 
-            # Generate Event Log Analysis Tab
-            eventlog_stats = getattr(self, 'eventlog_stats', {})
-            f.write(generate_eventlog_tab(eventlog_results, eventlog_stats))
+                # Generate Event Log Analysis Tab
+                eventlog_stats = getattr(self, 'eventlog_stats', {})
+                f.write(generate_eventlog_tab(eventlog_results, eventlog_stats))
 
-            # Generate MFT Analysis Tab
-            f.write(generate_mft_tab(mft_data, mft_stats))
+                # Generate MFT Analysis Tab
+                f.write(generate_mft_tab(mft_data, mft_stats))
 
-            # Generate Pagefile Analysis Tab
-            f.write(generate_pagefile_tab(pagefile_data))
+                # Generate Pagefile Analysis Tab
+                f.write(generate_pagefile_tab(pagefile_data))
 
             # Generate Encrypted Files Tab
             f.write(generate_encrypted_files_tab(encrypted_data))
@@ -1027,17 +1030,20 @@ def run_forensic_collection():
         # Generate Browser History Tab (NEW)
         f.write(generate_browser_history_tab(browser_history, browser_stats))
 
-        # Generate Registry Analysis Tab (NEW)
-        f.write(generate_registry_tab(registry_data, registry_stats))
+        # Windows-only tabs: Registry, Event Logs, MFT, Pagefile
+        # Only include these tabs when running on Windows
+        if current_os == OS_WINDOWS:
+            # Generate Registry Analysis Tab (NEW)
+            f.write(generate_registry_tab(registry_data, registry_stats))
 
-        # Generate Event Log Analysis Tab (NEW)
-        f.write(generate_eventlog_tab(eventlog_data, eventlog_stats))
+            # Generate Event Log Analysis Tab (NEW)
+            f.write(generate_eventlog_tab(eventlog_data, eventlog_stats))
 
-        # Generate MFT Analysis Tab (NEW)
-        f.write(generate_mft_tab(mft_data, mft_stats))
+            # Generate MFT Analysis Tab (NEW)
+            f.write(generate_mft_tab(mft_data, mft_stats))
 
-        # Generate Pagefile Analysis Tab (NEW)
-        f.write(generate_pagefile_tab(pagefile_data))
+            # Generate Pagefile Analysis Tab (NEW)
+            f.write(generate_pagefile_tab(pagefile_data))
 
         # Generate Encrypted Files Tab (NEW)
         f.write(generate_encrypted_files_tab(encrypted_data))

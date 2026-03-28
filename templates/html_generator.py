@@ -83,7 +83,7 @@ def generate_html_header(timestamp, assets_path="../assets", os_type="Windows"):
             </div>
         </header>
 
-        <!-- Tab Navigation -->
+        <!-- Tab Navigation (dynamic based on detected OS) -->
         <nav class="tab-navigation">
             <div class="tab-container">
                 <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">
@@ -127,7 +127,7 @@ def generate_html_header(timestamp, assets_path="../assets", os_type="Windows"):
                     </svg>
                     Browser History
                 </button>
-                <button class="tab-btn" data-tab="registry" onclick="switchTab('registry')">
+                {"" if os_type != "Windows" else '''<button class="tab-btn" data-tab="registry" onclick="switchTab('registry')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
                         <polyline points="13 2 13 9 20 9"></polyline>
@@ -135,15 +135,15 @@ def generate_html_header(timestamp, assets_path="../assets", os_type="Windows"):
                         <line x1="8" y1="17" x2="16" y2="17"></line>
                     </svg>
                     Registry Analysis
-                </button>
-                <button class="tab-btn" data-tab="eventlog" onclick="switchTab('eventlog')">
+                </button>'''}
+                {"" if os_type != "Windows" else '''<button class="tab-btn" data-tab="eventlog" onclick="switchTab('eventlog')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8l-6-6z"></path>
                         <path d="M14 3v5h5M16 13H8M16 17H8M10 9H8"></path>
                     </svg>
                     Event Logs
-                </button>
-                <button class="tab-btn" data-tab="mft" onclick="switchTab('mft')">
+                </button>'''}
+                {"" if os_type != "Windows" else '''<button class="tab-btn" data-tab="mft" onclick="switchTab('mft')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"></circle>
                         <path d="M12 6v6l4 2"></path>
@@ -151,8 +151,8 @@ def generate_html_header(timestamp, assets_path="../assets", os_type="Windows"):
                         <path d="M7.76 16.24l1.41-1.41"></path>
                     </svg>
                     MFT Analysis
-                </button>
-                <button class="tab-btn" data-tab="pagefile" onclick="switchTab('pagefile')">
+                </button>'''}
+                {"" if os_type != "Windows" else '''<button class="tab-btn" data-tab="pagefile" onclick="switchTab('pagefile')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
                         <polyline points="13 2 13 9 20 9"></polyline>
@@ -160,7 +160,7 @@ def generate_html_header(timestamp, assets_path="../assets", os_type="Windows"):
                         <path d="M8 17h8"></path>
                     </svg>
                     Pagefile.sys
-                </button>
+                </button>'''}
                 <button class="tab-btn" data-tab="encrypted" onclick="switchTab('encrypted')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -610,17 +610,29 @@ def generate_os_commands_tab(os_results, os_type="Windows", linux_results=None, 
     linux_active = os_type == 'Linux'
     macos_active = os_type == 'macOS'
 
+    # Safety: if a specific OS is detected but its results are missing,
+    # the first positional arg (os_results) likely contains those results
+    # due to the caller passing them in the wrong position.
+    if linux_active and linux_results is None and os_results is not None:
+        linux_results = os_results
+        os_results = None  # Don't double-display under Windows
+    if macos_active and macos_results is None and os_results is not None:
+        macos_results = os_results
+        os_results = None
+
     # Generate Windows commands section
-    windows_content = generate_os_command_sections(os_results) if os_results else '<div class="no-data">No Windows commands available</div>'
+    # Use 'is not None' instead of truthiness check — an empty dict {} means
+    # "commands were collected but produced no output", NOT "no data at all"
+    windows_content = generate_os_command_sections(os_results) if os_results is not None else '<div class="no-data">No Windows commands available</div>'
 
     # Generate Linux commands section
-    if linux_results:
+    if linux_results is not None:
         linux_content = generate_os_command_sections(linux_results, shell_type="BASH")
     else:
         linux_content = '<div class="no-data">Linux commands not collected (run on a Linux system)</div>'
 
     # Generate macOS commands section
-    if macos_results:
+    if macos_results is not None:
         macos_content = generate_os_command_sections(macos_results, shell_type="ZSH")
     else:
         macos_content = '<div class="no-data">macOS commands not collected (run on a macOS system)</div>'
@@ -675,6 +687,10 @@ def generate_os_command_sections(os_results, shell_type=None):
         shell_type: Default shell type for badge display (e.g., 'BASH', 'ZSH', 'CMD', 'PS')
     """
     html = ''
+
+    # Handle None or empty results gracefully
+    if not os_results:
+        return '<div class="no-data">No command results available for this OS</div>'
 
     # Dynamically get all categories from os_results (excluding analysis categories)
     categories = [cat for cat in os_results.keys() if cat not in ['regex_analysis', 'hash_analysis']]
