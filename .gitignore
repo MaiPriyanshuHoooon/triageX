@@ -1,5 +1,5 @@
 # Python
-_pycache_/
+__pycache__/
 *.py[cod]
 *$py.class
 *.so
@@ -14,22 +14,25 @@ dist/
 build/
 
 # PyInstaller
+*.spec
 *.spec.bak
 *.manifest.bak
 
-# Forensic output (generated files)
+# Forensic output (generated at runtime — never commit these)
 forensic_output/
 forensic_output_*/
 Forensic_Report_*/
-*.html
+forensic_report_*.html
+mft_analyzer_state_*.pkl
+*.pkl
 *.log
-*.md
 test_output/
 temp/
 tmp/
 tempCodeRunnerFile.py
-*.pkl
-*.spec
+
+# Dev/test artifacts
+test_verification_report/
 
 # License files (NEVER commit these!)
 *.lic
