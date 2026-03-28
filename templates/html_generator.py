@@ -161,6 +161,14 @@ def generate_html_header(timestamp, assets_path="../assets", os_type="Windows"):
                     </svg>
                     Pagefile.sys
                 </button>'''}
+                <button class="tab-btn" data-tab="memory" onclick="switchTab('memory')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect>
+                        <path d="M6 12h.01M10 12h.01M14 12h.01M18 12h.01"></path>
+                        <path d="M6 6V4M10 6V4M14 6V4M18 6V4M6 18v2M10 18v2M14 18v2M18 18v2"></path>
+                    </svg>
+                    Memory Analysis
+                </button>
                 <button class="tab-btn" data-tab="encrypted" onclick="switchTab('encrypted')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>

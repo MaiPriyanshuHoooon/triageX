@@ -44,10 +44,12 @@ from templates.registry_tab import generate_registry_tab
 from templates.eventlog_tab import generate_eventlog_tab
 from templates.mft_tab import generate_mft_tab
 from templates.pagefile_tab import generate_pagefile_tab
+from templates.memory_dump_tab import generate_memory_dump_tab
 from core.regex_analyzer import RegexAnalyzer
 from core.hash_analyzer import HashAnalyzer
 from core.file_scanner import FileScanner
 from core.ioc_scanner import IOCScanner
+from core.memory_dumper import get_memory_dumper
 from core.encrypted_file_scanner import EncryptedFileScanner
 from core.browser_analyzer import BrowserHistoryAnalyzer
 from core.registry_analyzer import RegistryAnalyzer
@@ -340,6 +342,35 @@ class ForensicCollector:
 
         return eventlog_data
 
+    def analyze_memory(self):
+        """
+        Perform memory dump / memory analysis for the detected OS.
+
+        Returns:
+            dict: Memory analysis data (OS-specific content)
+        """
+        memory_data = {}
+
+        try:
+            dumper = get_memory_dumper(self.output_dir, os_type=self.current_os)
+            memory_data = dumper.collect_all(acquire_sample=False)
+
+            # Add to activity log
+            self.activity_log.append({
+                'type': 'memory analysis',
+                'matches': memory_data.get('summary', {}).get('sources_available', 0)
+                           if isinstance(memory_data.get('summary'), dict) else 0
+            })
+
+            # Store for report
+            self.memory_data = memory_data
+
+        except Exception as e:
+            print(f"⚠️  Memory analysis error: {str(e)}")
+            self.memory_data = {'os_type': self.current_os, 'error': str(e)}
+
+        return memory_data
+
     def generate_html_report(self, results, ioc_results, browser_results, eventlog_results):
         """
         Generate comprehensive HTML forensic report.
@@ -481,6 +512,10 @@ class ForensicCollector:
             # Generate Browser History Tab
             browser_stats = getattr(self, 'browser_stats', {})
             f.write(generate_browser_history_tab(browser_results, browser_stats))
+
+            # Generate Memory Analysis Tab (cross-platform)
+            memory_data = getattr(self, 'memory_data', {'os_type': self.current_os})
+            f.write(generate_memory_dump_tab(memory_data))
 
             # Windows-only tabs: Registry, Event Logs, MFT, Pagefile
             # Only include these tabs when running on Windows
@@ -820,6 +855,44 @@ def run_forensic_collection():
         'matches': browser_stats.get('total_entries', 0)
     })
 
+    # Perform Memory Analysis (Cross-Platform)
+    print(f"\n{'='*70}")
+    print(f"🧠 MEMORY ANALYSIS")
+    print(f"{'='*70}")
+    memory_data = {}
+
+    try:
+        output_dir = os.path.dirname(os.path.abspath(html_file))
+        memory_dumper = get_memory_dumper(output_dir, os_type=current_os)
+        memory_data = memory_dumper.collect_all(acquire_sample=False)
+
+        summary = memory_data.get('summary', {})
+        print(f"{'='*70}")
+        print(f"✅ MEMORY ANALYSIS SUMMARY ({current_os}):")
+        if current_os == OS_LINUX:
+            print(f"   Total RAM: {summary.get('total_ram', 'N/A')}")
+            print(f"   Sources available: {summary.get('sources_available', 0)}")
+            print(f"   RAM ranges: {summary.get('ram_ranges', 0)}")
+        elif current_os == OS_MACOS:
+            print(f"   Total RAM: {summary.get('total_ram', 'N/A')}")
+            print(f"   Memory pressure: {summary.get('memory_pressure', 'N/A')}")
+        elif current_os == OS_WINDOWS:
+            print(f"   Total RAM: {summary.get('total_ram', 'N/A')}")
+            print(f"   Crash dumps: {summary.get('crash_dumps_found', 0)}")
+            print(f"   Memory artifacts: {summary.get('memory_artifacts_found', 0)}")
+        print(f"{'='*70}\n")
+
+    except Exception as e:
+        print(f"    ❌ Memory analysis error: {str(e)}")
+        memory_data = {'os_type': current_os, 'error': str(e)}
+
+    # Add to activity log
+    activity_log.append({
+        'type': 'memory analysis',
+        'matches': memory_data.get('summary', {}).get('sources_available', 0)
+                   if isinstance(memory_data.get('summary'), dict) else 0
+    })
+
     # Perform Registry Analysis
     print(f"\n{'='*70}")
     print(f"📋 REGISTRY ANALYSIS")
@@ -1029,6 +1102,9 @@ def run_forensic_collection():
 
         # Generate Browser History Tab (NEW)
         f.write(generate_browser_history_tab(browser_history, browser_stats))
+
+        # Generate Memory Analysis Tab (Cross-Platform)
+        f.write(generate_memory_dump_tab(memory_data))
 
         # Windows-only tabs: Registry, Event Logs, MFT, Pagefile
         # Only include these tabs when running on Windows
