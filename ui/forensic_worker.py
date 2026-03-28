@@ -96,6 +96,14 @@ class ForensicWorker(QThread):
             self.log_message.emit("   → Scanning user directories for encrypted content...")
             self.progress.emit(87)
 
+            # Memory analysis (cross-platform)
+            self.log_message.emit("🧠 Performing memory analysis...")
+            self.progress.emit(88)
+            self.log_message.emit("   → Collecting system memory information...")
+            collector.analyze_memory()
+            self.log_message.emit("✅ Memory analysis complete")
+            self.progress.emit(89)
+
             # Registry / System config analysis (OS-aware)
             if is_windows():
                 self.log_message.emit("📝 Analyzing Windows Registry...")

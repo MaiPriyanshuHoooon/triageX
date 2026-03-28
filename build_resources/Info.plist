@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleName</key>
+    <string>triageX Forensic Tool</string>
+
+    <key>CFBundleDisplayName</key>
+    <string>triageX Forensic Tool</string>
+
+    <key>CFBundleIdentifier</key>
+    <string>com.triagex.forensictool</string>
+
+    <key>CFBundleVersion</key>
+    <string>2.0.0</string>
+
+    <key>CFBundleShortVersionString</key>
+    <string>2.0.0</string>
+
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+
+    <key>CFBundleSignature</key>
+    <string>????</string>
+
+    <key>CFBundleExecutable</key>
+    <string>ForensicTool</string>
+
+    <key>CFBundleIconFile</key>
+    <string>icon.icns</string>
+
+    <key>LSMinimumSystemVersion</key>
+    <string>12.0</string>
+
+    <key>NSHighResolutionCapable</key>
+    <true/>
+
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.utilities</string>
+
+    <!-- Privacy permission descriptions (shown to user) -->
+    <key>NSAppleEventsUsageDescription</key>
+    <string>triageX requires Apple Events access for forensic data collection.</string>
+
+    <key>NSSystemAdministrationUsageDescription</key>
+    <string>triageX requires administrator privileges for complete forensic triage.</string>
+
+    <key>NSDesktopFolderUsageDescription</key>
+    <string>triageX scans Desktop for forensic artifacts and PII detection.</string>
+
+    <key>NSDocumentsFolderUsageDescription</key>
+    <string>triageX scans Documents for forensic artifacts and PII detection.</string>
+
+    <key>NSDownloadsFolderUsageDescription</key>
+    <string>triageX scans Downloads for forensic artifacts and PII detection.</string>
+</dict>
+</plist>

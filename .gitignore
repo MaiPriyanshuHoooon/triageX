@@ -29,6 +29,7 @@ temp/
 tmp/
 tempCodeRunnerFile.py
 *.pkl
+*.spec
 
 # License files (NEVER commit these!)
 *.lic
