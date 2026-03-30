@@ -88,7 +88,7 @@ jobs:
           pip install pyinstaller
           pip install requests cryptography PyQt6 PyQt6-Qt6 PyQt6-sip psutil watchdog
           pip install PyPDF2 python-docx openpyxl Pillow pytesseract pandas opencv-python
-          brew install tesseract create-dmg || true
+          brew install tesseract || true
 
       - name: Build macOS .app
         run: python build.py --target macos --mode onedir
@@ -96,12 +96,7 @@ jobs:
       - name: Package distribution
         run: |
           cd dist
-          # If .dmg was created by build.py, use it; otherwise zip the .app
-          if ls *.dmg 1>/dev/null 2>&1; then
-            mv *.dmg ForensicTool-macOS-arm64.dmg
-          else
-            zip -r ForensicTool-macOS-arm64.zip ForensicTool.app/
-          fi
+          zip -r ForensicTool-macOS-arm64.zip ForensicTool.app/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -186,7 +181,7 @@ jobs:
             | Platform | File | How to Run |
             |----------|------|------------|
             | **Windows** | `ForensicTool-Windows-x64.zip` | Extract → Right-click `.exe` → Run as Administrator |
-            | **macOS** | `ForensicTool-macOS-arm64.dmg` | Mount DMG → Drag to Applications → `sudo open ForensicTool.app` |
+            | **macOS** | `ForensicTool-macOS-arm64.zip` | Extract → Right-click app → Open → `sudo` from Terminal |
             | **Linux** | `ForensicTool-Linux-x64.tar.gz` | Extract → `chmod +x ForensicTool` → `sudo ./ForensicTool` |
 
             ### Requirements

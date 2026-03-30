@@ -116,7 +116,6 @@ def run(cmd, **kwargs):
     if result.returncode != 0:
         fail(f"Command failed with exit code {result.returncode}")
     return result
-    return subprocess.run(cmd, **kwargs)
 
 
 def detect_host_os():
@@ -257,8 +256,8 @@ def build_windows(mode="onedir"):
 
 # -- macOS Build ---------------------------------------------------
 def build_macos(mode="onedir"):
-    """Build macOS .app bundle, optionally wrap in .dmg."""
-    total = 6
+    """Build macOS .app bundle."""
+    total = 5
     step(1, total, "Preparing macOS build...")
 
     hidden = _hidden_imports("macOS")
@@ -317,39 +316,11 @@ def build_macos(mode="onedir"):
     else:
         fail("Build output not found")
 
-    # Attempt to create .dmg
-    step(4, total, "Creating .dmg installer (if create-dmg available)...")
-    dmg_path = None
-    try:
-        run(["which", "create-dmg"], capture_output=True, check=True)
-        dmg_path = PROJECT_ROOT / "dist" / f"{APP_NAME}-{APP_VERSION}-macOS.dmg"
-
-        dmg_cmd = [
-            "create-dmg",
-            "--volname", f"{APP_NAME} Installer",
-            "--volicon", str(icns) if icns.exists() else "",
-            "--window-pos", "200", "120",
-            "--window-size", "600", "400",
-            "--icon-size", "100",
-            "--icon", f"{APP_NAME}.app", "175", "180",
-            "--app-drop-link", "425", "180",
-            "--hide-extension", f"{APP_NAME}.app",
-            str(dmg_path),
-            str(PROJECT_ROOT / "dist"),
-        ]
-        # Filter empty strings
-        dmg_cmd = [x for x in dmg_cmd if x]
-        run(dmg_cmd)
-        ok(f"DMG created: {dmg_path}")
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        warn("create-dmg not found -- skipping .dmg creation")
-        warn("Install with: brew install create-dmg")
-
-    step(5, total, "Writing distribution README...")
+    step(4, total, "Writing distribution README...")
     write_readme("macOS", PROJECT_ROOT / "dist")
 
-    step(6, total, "Build complete!")
-    output = dmg_path or app_bundle or app_dir
+    step(5, total, "Build complete!")
+    output = app_bundle or app_dir
     print(f"\n  {C_GREEN}{'='*50}")
     print(f"   Output: {output}")
     print(f"   Run:    sudo open {APP_NAME}.app")
