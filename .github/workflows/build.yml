@@ -47,8 +47,8 @@ jobs:
           pip install pyinstaller
           pip install requests cryptography PyQt6 PyQt6-Qt6 PyQt6-sip psutil watchdog
           pip install PyPDF2 python-docx openpyxl Pillow pytesseract
-          pip install pywin32
-          python -c "import subprocess; subprocess.run(['python', 'Scripts/pywin32_postinstall.py', '-install'], check=False)" || true
+          pip install pywin32 wmi
+          python -c "import subprocess, sys, os; post=os.path.join(os.path.dirname(sys.executable), 'Scripts', 'pywin32_postinstall.py'); subprocess.run([sys.executable, post, '-install'], check=False) if os.path.exists(post) else None" || true
           pip install pandas
           pip install opencv-python-headless || pip install opencv-python || echo "opencv not available, skipping"
           pip install pytsk3 || echo "pytsk3 not available on this runner, skipping"
