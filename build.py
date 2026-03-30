@@ -201,9 +201,9 @@ def build_windows(mode="onedir"):
     manifest = PROJECT_ROOT / "ForensicTool.manifest"
     if manifest.exists():
         cmd.extend(["--manifest", str(manifest)])
-
-    # UAC admin
-    cmd.append("--uac-admin")
+    else:
+        # No custom manifest — let PyInstaller generate one with admin
+        cmd.append("--uac-admin")
 
     # Mode
     if mode == "onefile":
