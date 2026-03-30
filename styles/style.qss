@@ -1,11 +1,11 @@
 /*
- * Modern Dark Theme for Windows Forensic Triage Tool
+ * Modern Dark Theme for triageX — Multi-Platform Forensic Triage
  * Premium, glassmorphic design with smooth animations
  */
 
 /* Global Styles */
 * {
-    font-family: "Segoe UI", "San Francisco", "Roboto", Arial, sans-serif;
+    font-family: -apple-system, "San Francisco", "Segoe UI", "Roboto", Arial, sans-serif;
     font-size: 10pt;
 }
 

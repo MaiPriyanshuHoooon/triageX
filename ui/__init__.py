@@ -1,5 +1,5 @@
 """
-UI Package for Windows Forensic Triage Tool
+UI Package for triageX — Multi-Platform Forensic Triage
 Handles all PyQt6 UI components
 """
 

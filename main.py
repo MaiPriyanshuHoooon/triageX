@@ -1,5 +1,5 @@
 """
-Main Entry Point for Windows Forensic Triage Tool
+Main Entry Point for triageX — Multi-Platform Forensic Triage
 PyQt6 version with modern UI
 """
 

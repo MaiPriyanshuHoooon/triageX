@@ -229,7 +229,7 @@ def generate_html_footer(assets_path="../assets"):
         <!-- Footer -->
         <footer class="app-footer">
             <div class="footer-content">
-                <span>© 2025 LEA Forensic Triage Platform</span>
+                <span>© 2026 triageX — Multi-Platform Forensic Triage</span>
                 <div class="footer-right">
                     <span>Evidence Integrity: SHA-256 Verified</span>
                     <span class="status-indicator">

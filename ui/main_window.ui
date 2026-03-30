@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Windows Forensic Triage Tool - Professional Edition</string>
+   <string>triageX - Multi-Platform Forensic Triage</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -24,14 +24,14 @@
        <item>
         <widget class="QLabel" name="titleLabel">
          <property name="text">
-          <string>🛡️ Windows Forensic Triage Tool</string>
+          <string>🛡️ triageX — Forensic Triage Platform</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QLabel" name="subtitleLabel">
          <property name="text">
-          <string>Professional Edition - Automated Incident Response</string>
+          <string>Multi-Platform Forensic Triage for LEA</string>
          </property>
         </widget>
        </item>

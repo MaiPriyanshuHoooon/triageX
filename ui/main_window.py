@@ -1,6 +1,6 @@
 """
-Main Window for Forensic Triage Tool
-Cross-platform: loads UI from main_window.ui and handles forensic operations
+Main Window for triageX — Multi-Platform Forensic Triage
+Loads UI from main_window.ui and handles forensic operations
 """
 
 import os
@@ -119,28 +119,18 @@ class ForensicToolGUI(QMainWindow):
 
     def initialize_log(self):
         """Initialize activity log with welcome message"""
-        self.log_message("=" * 60)
-        self.log_message(f"🛡️  Forensic Triage Tool - Professional Edition ({self.current_os})")
-        self.log_message("=" * 60)
-        self.log_message(f"License Type: {self.license_info['license_type'].upper()}")
-        self.log_message(f"Device ID: {self.license_info['device_id'][:30]}...")
-        if self.license_info.get('expiration_date'):
-            self.log_message(f"Expires: {self.license_info['expiration_date']}")
-        self.log_message(f"Detected OS: {self.current_os}")
-        self.log_message("=" * 60)
+        self.log_message("=" * 50)
+        self.log_message(f"triageX  |  {self.current_os}  |  {self.license_info['license_type'].upper()}")
+        self.log_message("=" * 50)
 
-        # Check admin/root privileges (cross-platform)
         if is_admin():
-            self.log_message("✅ Running with elevated privileges")
-            self.log_message("   → Full forensic access enabled")
+            self.log_message("Elevated privileges: YES — full forensic access")
         else:
-            self.log_message("⚠️  NOT running with elevated privileges")
+            self.log_message("Elevated privileges: NO — some features limited")
             if self.current_os == "Windows":
-                self.log_message("   → Some features may be limited (MFT, Pagefile, Registry)")
-                self.log_message("   → Right-click and 'Run as Administrator' for full access")
+                self.log_message("  Tip: Right-click EXE → Run as Administrator")
             else:
-                self.log_message("   → Some features may be limited (system logs, process details)")
-                self.log_message(f"   → Re-run with: sudo python3 {sys.argv[0]}")
+                self.log_message(f"  Tip: sudo python3 {sys.argv[0]}")
 
         self.log_message("")
 
