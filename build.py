@@ -79,10 +79,10 @@ C_CYAN   = "\033[96m"
 def banner():
     """Print build banner."""
     print(f"""
-{C_CYAN}{'═'*62}
+{C_CYAN}{'='*62}
    triageX Build System  v{APP_VERSION}
-   {platform.system()} {platform.machine()} • Python {platform.python_version()}
-{'═'*62}{C_RESET}
+   {platform.system()} {platform.machine()} - Python {platform.python_version()}
+{'='*62}{C_RESET}
 """)
 
 
@@ -242,10 +242,10 @@ def build_windows(mode="onedir"):
     write_readme("Windows", PROJECT_ROOT / "dist")
 
     step(5, total, "Build complete!")
-    print(f"\n  {C_GREEN}{'═'*50}")
+    print(f"\n  {C_GREEN}{'='*50}")
     print(f"   Output: {exe}")
     print(f"   Run:    Right-click → Run as Administrator")
-    print(f"  {'═'*50}{C_RESET}\n")
+    print(f"  {'='*50}{C_RESET}\n")
     return exe
 
 
@@ -344,17 +344,17 @@ def build_macos(mode="onedir"):
 
     step(6, total, "Build complete!")
     output = dmg_path or app_bundle or app_dir
-    print(f"\n  {C_GREEN}{'═'*50}")
+    print(f"\n  {C_GREEN}{'='*50}")
     print(f"   Output: {output}")
     print(f"   Run:    sudo open {APP_NAME}.app")
-    print(f"  {'═'*50}{C_RESET}\n")
+    print(f"  {'='*50}{C_RESET}\n")
     return output
 
 
 # ── Linux Build ───────────────────────────────────────────────────
 def build_linux(mode="onefile"):
     """Build Linux binary. Default to onefile for easy distribution."""
-    total = 5
+    total = 6
     step(1, total, "Preparing Linux build...")
 
     hidden = _hidden_imports("Linux")
@@ -413,11 +413,14 @@ def build_linux(mode="onefile"):
     step(4, total, "Creating .desktop launcher & AppDir...")
     create_linux_desktop(binary)
 
-    step(5, total, "Build complete!")
-    print(f"\n  {C_GREEN}{'═'*50}")
+    step(5, total, "Writing distribution README...")
+    write_readme("Linux", PROJECT_ROOT / "dist")
+
+    step(6, total, "Build complete!")
+    print(f"\n  {C_GREEN}{'='*50}")
     print(f"   Output: {binary}")
     print(f"   Run:    sudo ./{APP_NAME}")
-    print(f"  {'═'*50}{C_RESET}\n")
+    print(f"  {'='*50}{C_RESET}\n")
     return binary
 
 
