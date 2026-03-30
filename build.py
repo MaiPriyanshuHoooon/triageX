@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-triageX — Cross-Platform Build System
+triageX -- Cross-Platform Build System
 =======================================
 
 Unified build script that auto-detects the current OS and produces
 the correct native package:
 
-    Windows  →  ForensicTool.exe           (PyInstaller one-dir)
-    macOS    →  ForensicTool.app / .dmg    (PyInstaller .app bundle)
-    Linux    →  ForensicTool.AppImage      (PyInstaller + AppImage)
+    Windows  ->  ForensicTool.exe           (PyInstaller one-dir)
+    macOS    ->  ForensicTool.app / .dmg    (PyInstaller .app bundle)
+    Linux    ->  ForensicTool.AppImage      (PyInstaller + AppImage)
 
 Usage
 -----
@@ -36,7 +36,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-# ── Constants ──────────────────────────────────────────────────────
+# -- Constants ------------------------------------------------------
 APP_NAME = "ForensicTool"
 APP_VERSION = "2.0.0"
 APP_ID = "com.triagex.forensictool"
@@ -78,7 +78,7 @@ C_RED    = "\033[91m"
 C_CYAN   = "\033[96m"
 
 
-# ── Helpers ────────────────────────────────────────────────────────
+# -- Helpers --------------------------------------------------------
 def banner():
     """Print build banner."""
     print(f"""
@@ -95,24 +95,27 @@ def step(num, total, msg):
 
 
 def ok(msg):
-    print(f"  {C_GREEN}✓{C_RESET} {msg}")
+    print(f"  {C_GREEN}[OK]{C_RESET} {msg}")
 
 
 def warn(msg):
-    print(f"  {C_YELLOW}⚠{C_RESET} {msg}")
+    print(f"  {C_YELLOW}[WARN]{C_RESET} {msg}")
 
 
 def fail(msg):
-    print(f"  {C_RED}✗{C_RESET} {msg}")
+    print(f"  {C_RED}[FAIL]{C_RESET} {msg}")
     sys.exit(1)
 
 
 def run(cmd, **kwargs):
     """Run a shell command, streaming output."""
     kwargs.setdefault("cwd", str(PROJECT_ROOT))
-    kwargs.setdefault("check", True)
     if isinstance(cmd, str):
         kwargs["shell"] = True
+    result = subprocess.run(cmd, **kwargs)
+    if result.returncode != 0:
+        fail(f"Command failed with exit code {result.returncode}")
+    return result
     return subprocess.run(cmd, **kwargs)
 
 
@@ -130,7 +133,7 @@ def ensure_pyinstaller():
         import PyInstaller
         ok(f"PyInstaller {PyInstaller.__version__} found")
     except ImportError:
-        warn("PyInstaller not found — installing...")
+        warn("PyInstaller not found -- installing...")
         run([sys.executable, "-m", "pip", "install", "pyinstaller"])
         ok("PyInstaller installed")
 
@@ -149,7 +152,7 @@ def clean_build():
     ok("Clean complete")
 
 
-# ── Spec-file generators ──────────────────────────────────────────
+# -- Spec-file generators ------------------------------------------
 def _data_pairs():
     """Return list of (src, dest) data directory tuples."""
     pairs = []
@@ -174,7 +177,7 @@ def _hidden_imports(target_os):
     return imports
 
 
-# ── Windows Build ─────────────────────────────────────────────────
+# -- Windows Build -------------------------------------------------
 def build_windows(mode="onedir"):
     """Build Windows .exe using PyInstaller."""
     total = 5
@@ -202,7 +205,7 @@ def build_windows(mode="onedir"):
     if manifest.exists():
         cmd.extend(["--manifest", str(manifest)])
     else:
-        # No custom manifest — let PyInstaller generate one with admin
+        # No custom manifest -- let PyInstaller generate one with admin
         cmd.append("--uac-admin")
 
     # Mode
@@ -247,12 +250,12 @@ def build_windows(mode="onedir"):
     step(5, total, "Build complete!")
     print(f"\n  {C_GREEN}{'='*50}")
     print(f"   Output: {exe}")
-    print(f"   Run:    Right-click → Run as Administrator")
+    print(f"   Run:    Right-click -> Run as Administrator")
     print(f"  {'='*50}{C_RESET}\n")
     return exe
 
 
-# ── macOS Build ───────────────────────────────────────────────────
+# -- macOS Build ---------------------------------------------------
 def build_macos(mode="onedir"):
     """Build macOS .app bundle, optionally wrap in .dmg."""
     total = 6
@@ -276,7 +279,7 @@ def build_macos(mode="onedir"):
     if icns.exists():
         cmd.extend(["--icon", str(icns)])
     elif ico.exists():
-        warn("No .icns icon found — using .ico (may look blurry)")
+        warn("No .icns icon found -- using .ico (may look blurry)")
         cmd.extend(["--icon", str(ico)])
 
     if mode == "onefile":
@@ -339,7 +342,7 @@ def build_macos(mode="onedir"):
         run(dmg_cmd)
         ok(f"DMG created: {dmg_path}")
     except (subprocess.CalledProcessError, FileNotFoundError):
-        warn("create-dmg not found — skipping .dmg creation")
+        warn("create-dmg not found -- skipping .dmg creation")
         warn("Install with: brew install create-dmg")
 
     step(5, total, "Writing distribution README...")
@@ -354,7 +357,7 @@ def build_macos(mode="onedir"):
     return output
 
 
-# ── Linux Build ───────────────────────────────────────────────────
+# -- Linux Build ---------------------------------------------------
 def build_linux(mode="onefile"):
     """Build Linux binary. Default to onefile for easy distribution."""
     total = 6
@@ -445,7 +448,7 @@ Keywords=forensic;triage;security;incident;response;
     ok(f"Created {desktop_file.name}")
 
 
-# ── README generator ──────────────────────────────────────────────
+# -- README generator ----------------------------------------------
 def write_readme(target_os, dist_dir):
     """Write a platform-specific README in dist/."""
     run_instructions = {
@@ -458,8 +461,8 @@ def write_readme(target_os, dist_dir):
         "macOS": (
             "  1. Open Terminal\n"
             "  2. Run: sudo open ForensicTool.app\n"
-            "     (or drag to Applications, right-click → Open)\n"
-            "  3. Grant Full Disk Access in System Settings → Privacy\n"
+            "     (or drag to Applications, right-click -> Open)\n"
+            "  3. Grant Full Disk Access in System Settings -> Privacy\n"
             "  4. Activate license or start trial\n"
         ),
         "Linux": (
@@ -471,7 +474,7 @@ def write_readme(target_os, dist_dir):
     }
 
     readme = f"""{'='*62}
-  triageX Forensic Tool v{APP_VERSION} — {target_os} Edition
+  triageX Forensic Tool v{APP_VERSION} -- {target_os} Edition
   Built: {datetime.now().strftime('%Y-%m-%d %H:%M')}
 {'='*62}
 
@@ -479,23 +482,23 @@ HOW TO RUN:
 {run_instructions.get(target_os, '')}
 
 FEATURES:
-  • Cross-platform forensic triage (Windows / macOS / Linux)
-  • OS command collection with auto-detection
-  • Browser history analysis (Chrome, Firefox, Edge, Safari)
-  • Hash analysis with VirusTotal integration
-  • IOC scanning & regex pattern matching
-  • PII detection across user directories
-  • Encrypted file detection
-  • Memory analysis (RAM info, process memory, dumps)
-  • Professional HTML report generation
-  {"• Windows Registry, Event Logs, MFT, Pagefile analysis" if target_os == "Windows" else ""}
+  - Cross-platform forensic triage (Windows / macOS / Linux)
+  - OS command collection with auto-detection
+  - Browser history analysis (Chrome, Firefox, Edge, Safari)
+  - Hash analysis with VirusTotal integration
+  - IOC scanning & regex pattern matching
+  - PII detection across user directories
+  - Encrypted file detection
+  - Memory analysis (RAM info, process memory, dumps)
+  - Professional HTML report generation
+  {"- Windows Registry, Event Logs, MFT, Pagefile analysis" if target_os == "Windows" else ""}
 
 SYSTEM REQUIREMENTS:
-  • {"Windows 10/11" if target_os == "Windows" else "macOS 12+" if target_os == "macOS" else "Ubuntu 20.04+ / Fedora 36+ / Debian 11+"}
-  • {"Administrator" if target_os == "Windows" else "root/sudo"} privileges (for full forensic access)
-  • 4 GB RAM minimum
-  • 500 MB free disk space
-  • Display resolution: 1280×720 or higher
+  - {"Windows 10/11" if target_os == "Windows" else "macOS 12+" if target_os == "macOS" else "Ubuntu 20.04+ / Fedora 36+ / Debian 11+"}
+  - {"Administrator" if target_os == "Windows" else "root/sudo"} privileges (for full forensic access)
+  - 4 GB RAM minimum
+  - 500 MB free disk space
+  - Display resolution: 1280x720 or higher
 
 {'='*62}
 """
@@ -504,7 +507,7 @@ SYSTEM REQUIREMENTS:
     ok("README.txt written")
 
 
-# ── Pre-flight checks ─────────────────────────────────────────────
+# -- Pre-flight checks ---------------------------------------------
 def preflight(target_os):
     """Verify all prerequisites before building."""
     print(f"\n  {C_CYAN}Pre-flight checks for {target_os}...{C_RESET}\n")
@@ -544,7 +547,7 @@ def preflight(target_os):
             import win32api
             ok("pywin32 available")
         except ImportError:
-            warn("pywin32 not installed — Windows-specific features may fail at runtime")
+            warn("pywin32 not installed -- Windows-specific features may fail at runtime")
 
     if target_os == "macOS":
         # Check for Xcode command line tools
@@ -552,12 +555,12 @@ def preflight(target_os):
             run(["xcode-select", "-p"], capture_output=True, check=True)
             ok("Xcode CLI tools found")
         except (subprocess.CalledProcessError, FileNotFoundError):
-            warn("Xcode CLI tools not found — install with: xcode-select --install")
+            warn("Xcode CLI tools not found -- install with: xcode-select --install")
 
     print()
 
 
-# ── Main entry point ──────────────────────────────────────────────
+# -- Main entry point ----------------------------------------------
 def main():
     parser = argparse.ArgumentParser(
         description="triageX Cross-Platform Build System",
