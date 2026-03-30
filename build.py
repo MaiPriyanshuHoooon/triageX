@@ -57,10 +57,11 @@ COMMON_HIDDEN_IMPORTS = [
 ]
 # Windows-only hidden imports
 WIN_HIDDEN_IMPORTS = [
-    "pywin32", "win32com", "win32com.client",
+    "win32com", "win32com.client",
     "win32api", "win32con", "pywintypes", "pythoncom",
     "win32file", "win32security", "ntsecuritycon",
-    "wmi", "pytsk3",
+    "win32evtlog", "win32evtlogutil",
+    "wmi",
 ]
 # Modules to exclude everywhere
 EXCLUDES = [
