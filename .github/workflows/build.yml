@@ -96,7 +96,7 @@ jobs:
       - name: Package distribution
         run: |
           cd dist
-          zip -r ForensicTool-macOS-arm64.zip ForensicTool.app/
+          zip -r --symlinks ForensicTool-macOS-arm64.zip ForensicTool.app/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
