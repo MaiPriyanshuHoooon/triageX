@@ -3011,4 +3011,225 @@ function launchCLITool() {
     }
 }
 
+/* ========== SUNBURST CHART ========== */
+function initSunburst(data) {
+    var canvas = document.getElementById('sunburstChart');
+    if (!canvas || !data || !data.length) return;
+    var ctx = canvas.getContext('2d');
+    var tooltip = document.querySelector('.sunburst-tooltip');
+    var centerVal = document.querySelector('.sunburst-center-val');
+    var dpr = window.devicePixelRatio || 1;
+
+    function resize() {
+        var parent = canvas.parentElement;
+        var size = Math.min(parent.clientWidth - 20, parent.clientHeight - 20, 340);
+        if (size < 100) size = 260;
+        canvas.style.width = size + 'px';
+        canvas.style.height = size + 'px';
+        canvas.width = size * dpr;
+        canvas.height = size * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+
+    var total = data.reduce(function(s, d) { return s + d.value; }, 0);
+    if (centerVal) centerVal.textContent = total.toLocaleString();
+
+    function cxFn() { return canvas.width / dpr / 2; }
+    function cyFn() { return canvas.height / dpr / 2; }
+    function maxR() { return Math.min(canvas.width, canvas.height) / dpr / 2 - 6; }
+
+    var RINGS = 3;
+    var GAP = 0.02;
+    var hoverIdx = -1;
+    var hoverRing = -1;
+    var animProg = 0;
+
+    function ringRadii() {
+        var mR = maxR();
+        var innerHole = mR * 0.32;
+        var bandTotal = mR - innerHole;
+        var ringGap = 2;
+        var bandW = (bandTotal - ringGap * (RINGS - 1)) / RINGS;
+        var rings = [];
+        for (var r = 0; r < RINGS; r++) {
+            rings.push({
+                inner: innerHole + r * (bandW + ringGap),
+                outer: innerHole + r * (bandW + ringGap) + bandW
+            });
+        }
+        return rings;
+    }
+
+    function buildSegments() {
+        var segs = [];
+        var angle = -Math.PI / 2;
+        for (var i = 0; i < data.length; i++) {
+            var d = data[i];
+            var sweep = (total > 0) ? (d.value / total) * (Math.PI * 2 - GAP * data.length) : 0;
+            segs.push({ start: angle, end: angle + sweep, color: d.color, name: d.name, value: d.value, tab: d.tab });
+            angle += sweep + GAP;
+        }
+        return segs;
+    }
+    var segments = buildSegments();
+
+    function hexToRgb(hex) {
+        hex = hex.replace('#', '');
+        return {
+            r: parseInt(hex.substring(0, 2), 16),
+            g: parseInt(hex.substring(2, 4), 16),
+            b: parseInt(hex.substring(4, 6), 16)
+        };
+    }
+
+    function draw() {
+        var w = canvas.width / dpr;
+        var h = canvas.height / dpr;
+        ctx.clearRect(0, 0, w, h);
+        var x = cxFn();
+        var y = cyFn();
+        var rings = ringRadii();
+
+        for (var r = 0; r < RINGS; r++) {
+            var iR = rings[r].inner;
+            var oR = rings[r].outer;
+            var baseAlpha = r === 0 ? 0.95 : (r === 1 ? 0.65 : 0.40);
+
+            for (var i = 0; i < segments.length; i++) {
+                var seg = segments[i];
+                var startA = seg.start;
+                var endA = startA + (seg.end - seg.start) * animProg;
+                var isHov = (i === hoverIdx);
+                var expand = (isHov && hoverRing === r) ? 4 : (isHov ? 2 : 0);
+
+                ctx.beginPath();
+                ctx.arc(x, y, oR + expand, startA, endA);
+                ctx.arc(x, y, iR, endA, startA, true);
+                ctx.closePath();
+
+                var rgb = hexToRgb(seg.color);
+                var alpha = isHov ? Math.min(baseAlpha + 0.25, 1.0) : baseAlpha;
+                ctx.fillStyle = 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',' + alpha + ')';
+                ctx.fill();
+
+                ctx.strokeStyle = isHov ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)';
+                ctx.lineWidth = isHov ? 1.2 : 0.5;
+                ctx.stroke();
+            }
+        }
+
+        if (animProg > 0.9) {
+            var outerRing = rings[RINGS - 1];
+            for (var i = 0; i < segments.length; i++) {
+                var seg = segments[i];
+                if (seg.end - seg.start > 0.4) {
+                    var midA = (seg.start + seg.end) / 2;
+                    var labelR = (outerRing.inner + outerRing.outer) / 2;
+                    var lx = x + Math.cos(midA) * labelR;
+                    var ly = y + Math.sin(midA) * labelR;
+                    ctx.save();
+                    ctx.font = '600 9px Inter, system-ui, sans-serif';
+                    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(seg.value.toLocaleString(), lx, ly);
+                    ctx.restore();
+                }
+            }
+        }
+    }
+
+    function animate() {
+        if (animProg < 1) {
+            animProg += 0.03;
+            if (animProg > 1) animProg = 1;
+            draw();
+            requestAnimationFrame(animate);
+        }
+    }
+
+    var animated = false;
+    if (typeof IntersectionObserver !== 'undefined') {
+        var obs = new IntersectionObserver(function(entries) {
+            if (entries[0].isIntersecting && !animated) {
+                animated = true;
+                animProg = 0;
+                animate();
+            }
+        }, { threshold: 0.3 });
+        obs.observe(canvas);
+    } else {
+        animated = true;
+        animProg = 0;
+        animate();
+    }
+
+    function hitTest(ex, ey) {
+        var rect = canvas.getBoundingClientRect();
+        var mx = ex - rect.left;
+        var my = ey - rect.top;
+        var dx = mx - cxFn();
+        var dy = my - cyFn();
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        var rings = ringRadii();
+        var hitRing = -1;
+        for (var r = 0; r < RINGS; r++) {
+            if (dist >= rings[r].inner && dist <= rings[r].outer + 4) { hitRing = r; break; }
+        }
+        if (hitRing < 0) return { idx: -1, ring: -1 };
+        var a = Math.atan2(dy, dx);
+        for (var i = 0; i < segments.length; i++) {
+            var s = segments[i].start;
+            var e = segments[i].end;
+            if (s <= e) {
+                if (a >= s && a <= e) return { idx: i, ring: hitRing };
+            } else {
+                if (a >= s || a <= e) return { idx: i, ring: hitRing };
+            }
+        }
+        return { idx: -1, ring: -1 };
+    }
+
+    canvas.addEventListener('mousemove', function(e) {
+        var hit = hitTest(e.clientX, e.clientY);
+        if (hit.idx !== hoverIdx || hit.ring !== hoverRing) {
+            hoverIdx = hit.idx;
+            hoverRing = hit.ring;
+            canvas.style.cursor = hit.idx >= 0 ? 'pointer' : 'default';
+            draw();
+        }
+        if (tooltip && hit.idx >= 0) {
+            var seg = segments[hit.idx];
+            var pct = total > 0 ? ((seg.value / total) * 100).toFixed(1) : '0';
+            tooltip.innerHTML = '<strong>' + seg.name + '</strong>&ensp;' + seg.value.toLocaleString() + ' (' + pct + '%)';
+            tooltip.style.opacity = '1';
+            var rect = canvas.parentElement.getBoundingClientRect();
+            tooltip.style.left = (e.clientX - rect.left + 14) + 'px';
+            tooltip.style.top = (e.clientY - rect.top - 12) + 'px';
+        } else if (tooltip) {
+            tooltip.style.opacity = '0';
+        }
+    });
+
+    canvas.addEventListener('mouseleave', function() {
+        hoverIdx = -1;
+        hoverRing = -1;
+        draw();
+        if (tooltip) tooltip.style.opacity = '0';
+        canvas.style.cursor = 'default';
+    });
+
+    canvas.addEventListener('click', function(e) {
+        var hit = hitTest(e.clientX, e.clientY);
+        if (hit.idx >= 0 && segments[hit.idx].tab) {
+            if (typeof switchTab === 'function') switchTab(segments[hit.idx].tab);
+        }
+    });
+
+    window.addEventListener('resize', function() {
+        resize();
+        if (animProg >= 1) draw();
+    });
+}
 

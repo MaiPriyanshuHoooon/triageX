@@ -201,12 +201,13 @@ def generate_html_header(timestamp, assets_path="../assets", os_type="Windows"):
 """
 
 
-def generate_html_footer(assets_path="../assets"):
+def generate_html_footer(assets_path="../assets", stats=None):
     """
     Generate HTML footer with JavaScript embedded inline
 
     Args:
         assets_path: Path to assets folder (CSS/JS) - used to read files for embedding
+        stats: Optional stats dict to show system info in the footer
 
     Returns:
         HTML footer string with embedded JavaScript
@@ -223,18 +224,37 @@ def generate_html_footer(assets_path="../assets"):
         print(f"Warning: Could not read JS file: {e}")
         js_content = "// JS file not found"
 
+    # Build system info row for footer
+    sys_info = ''
+    if stats:
+        os_type = stats.get('os_type', 'Unknown')
+        timestamp = stats.get('timestamp', 'N/A')
+        memory = stats.get('memory_total', 'N/A')
+        modules_active = stats.get('modules_active', '—')
+        sys_info = f'''
+            <div class="footer-sysinfo">
+                <span>OS: <strong>{os_type}</strong></span>
+                <span class="footer-sep"></span>
+                <span>Report: <strong>{timestamp}</strong></span>
+                <span class="footer-sep"></span>
+                <span>Memory: <strong>{memory}</strong></span>
+                <span class="footer-sep"></span>
+                <span>Modules: <strong>{modules_active}</strong></span>
+            </div>'''
+
     return f"""
         </main>
 
         <!-- Footer -->
         <footer class="app-footer">
             <div class="footer-content">
-                <span>© 2026 triageX — Multi-Platform Forensic Triage</span>
+                <span>triageX v2.0.1 — Multi-Platform Forensic Triage</span>
+                {sys_info}
                 <div class="footer-right">
-                    <span>Evidence Integrity: SHA-256 Verified</span>
+                    <span>SHA-256 Verified</span>
                     <span class="status-indicator">
                         <span class="status-dot"></span>
-                        System Online
+                        Online
                     </span>
                 </div>
             </div>
@@ -343,232 +363,200 @@ def generate_threat_dashboard(threat_data):
 
 def generate_dashboard_tab(stats, recent_activity, system_status):
     """
-    Generate the Dashboard tab content with stats cards and activity
-
-    Args:
-        stats: Dictionary with statistics (total_cases, active_cases, evidence_items, analysis_logs)
-        recent_activity: List of recent activity items
-        system_status: System status information
-
-    Returns:
-        HTML string for dashboard tab
+    Generate interactive forensic dashboard with sunburst chart, real stats,
+    and analysis module breakdown.
     """
+    raw_threat_score = stats.get('threat_score', 0)
+    threat_level = stats.get('threat_level', 'Low')
+    # Clamp display score to 100 max for the ring visual
+    display_score = min(raw_threat_score, 100)
+
+    # Threat description based on level
+    if 'Critical' in threat_level or 'CRITICAL' in threat_level:
+        threat_color = 'var(--status-high)'
+        threat_color_hex = '#ef4444'
+        threat_desc = 'Severe threats detected. Immediate investigation recommended. Multiple high-risk indicators present across scanned artifacts.'
+    elif 'High' in threat_level or 'HIGH' in threat_level:
+        threat_color = 'var(--accent-amber)'
+        threat_color_hex = '#f59e0b'
+        threat_desc = 'Significant threat indicators found. Review flagged items and correlate with known attack patterns.'
+    elif 'Medium' in threat_level or 'MEDIUM' in threat_level:
+        threat_color_hex = '#64748b'
+        threat_color = 'var(--text-tertiary)'
+        threat_desc = 'Moderate risk indicators present. Some suspicious patterns detected that warrant further analysis.'
+    else:
+        threat_color_hex = '#94a3b8'
+        threat_color = 'var(--text-secondary)'
+        threat_desc = 'Low risk. No significant threat indicators found in the current scan.'
+
+    ioc_severity = stats.get('ioc_severity', {})
+    critical_count = ioc_severity.get('CRITICAL', 0)
+    high_count = ioc_severity.get('HIGH', 0)
+    medium_count = ioc_severity.get('MEDIUM', 0)
+    low_count = ioc_severity.get('LOW', 0)
+
+    # SVG ring math: circumference = 2 * pi * 70 ≈ 439.82
+    ring_circumference = 439.82
+    ring_filled = (display_score / 100) * ring_circumference
+
+    # Build module data for the sunburst chart
+    modules = []
+    if stats.get('commands_executed', 0) > 0:
+        modules.append(('OS Commands', stats['commands_executed'], '#3b82f6', 'commands'))
+    if stats.get('files_hashed', 0) > 0:
+        modules.append(('Hash Analysis', stats['files_hashed'], '#8b5cf6', 'hash'))
+    if stats.get('total_iocs', 0) > 0:
+        modules.append(('IOC Scanner', stats['total_iocs'], '#ef4444', 'ioc'))
+    if stats.get('browser_entries', 0) > 0:
+        modules.append(('Browser History', stats['browser_entries'], '#06b6d4', 'browser'))
+    if stats.get('encrypted_scanned', 0) > 0:
+        modules.append(('Encrypted Files', stats['encrypted_scanned'], '#f59e0b', 'encrypted'))
+    if stats.get('pii_items', 0) > 0:
+        modules.append(('PII Detection', stats['pii_items'], '#ec4899', 'pii'))
+    if stats.get('registry_artifacts', 0) > 0:
+        modules.append(('Registry', stats['registry_artifacts'], '#10b981', 'registry'))
+    if stats.get('eventlog_anomalies', 0) > 0:
+        modules.append(('Event Logs', stats['eventlog_anomalies'], '#f97316', 'eventlog'))
+    if stats.get('mft_deleted', 0) > 0:
+        modules.append(('MFT Analysis', stats['mft_deleted'], '#a855f7', 'mft'))
+    if stats.get('pagefile_strings', 0) > 0:
+        modules.append(('Pagefile', stats['pagefile_strings'], '#14b8a6', 'pagefile'))
+
+    if not modules:
+        modules = [
+            ('OS Commands', max(stats.get('commands_executed', 0), 1), '#3b82f6', 'commands'),
+            ('Hash Analysis', max(stats.get('files_hashed', 0), 1), '#8b5cf6', 'hash'),
+            ('Browser', 1, '#06b6d4', 'browser'),
+            ('Regex', 1, '#64748b', 'regex'),
+        ]
+
+    import json
+    chart_data = json.dumps([{'name': m[0], 'value': m[1], 'color': m[2], 'tab': m[3]} for m in modules])
+
+    module_cards = _build_module_cards(stats)
+
+    # Severity breakdown for threat card
+    sev_pills = ''
+    if critical_count > 0:
+        sev_pills += f'<span class="sev-pill sev-critical">{critical_count} Critical</span>'
+    if high_count > 0:
+        sev_pills += f'<span class="sev-pill sev-high">{high_count} High</span>'
+    if medium_count > 0:
+        sev_pills += f'<span class="sev-pill sev-medium">{medium_count} Medium</span>'
+    if low_count > 0:
+        sev_pills += f'<span class="sev-pill sev-low">{low_count} Low</span>'
+    if not sev_pills:
+        sev_pills = '<span class="sev-pill sev-low">0 Detected</span>'
+
     html = f'''
     <div id="tab-dashboard" class="tab-content active">
-        <!-- Stats Cards Row -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon" style="background: rgba(34, 197, 94, 0.2);">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2">
-                        <rect x="3" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="3" width="7" height="7"></rect>
-                        <rect x="14" y="14" width="7" height="7"></rect>
-                        <rect x="3" y="14" width="7" height="7"></rect>
+        <div class="dash-top-row">
+            <!-- Threat Score Card -->
+            <div class="dash-threat-card card">
+                <div class="threat-ring-container">
+                    <svg class="threat-ring" viewBox="0 0 160 160">
+                        <circle cx="80" cy="80" r="70" fill="none" stroke="rgba(100,116,139,0.08)" stroke-width="10"/>
+                        <circle cx="80" cy="80" r="70" fill="none" stroke="{threat_color_hex}" stroke-width="10"
+                            stroke-dasharray="{ring_filled:.1f} {ring_circumference - ring_filled:.1f}"
+                            stroke-linecap="round"
+                            style="transition: stroke-dasharray 1.5s ease-out; filter: drop-shadow(0 0 6px {threat_color_hex}40);"/>
                     </svg>
+                    <div class="threat-ring-label">
+                        <span class="threat-ring-score" style="color: {threat_color_hex};">{display_score}</span>
+                        <span class="threat-ring-sub">/100</span>
+                    </div>
                 </div>
-                <div class="stat-info">
-                    <h3>Total Cases</h3>
-                    <div class="stat-value">{stats.get('total_cases', 3)}</div>
-                    <span class="stat-trend">+3 this week</span>
-                </div>
+                <span class="threat-level-tag" style="color: {threat_color_hex};">{threat_level}</span>
+                <p class="threat-desc">{threat_desc}</p>
+                <div class="threat-severity-row">{sev_pills}</div>
             </div>
 
-            <div class="stat-card">
-                <div class="stat-icon" style="background: rgba(251, 191, 36, 0.2);">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                    </svg>
+            <!-- Sunburst Chart -->
+            <div class="dash-sunburst-card card">
+                <div class="card-header"><h2>Analysis Coverage</h2></div>
+                <div class="sunburst-wrapper">
+                    <canvas id="sunburstChart" width="320" height="320"></canvas>
+                    <div id="sunburstTooltip" class="sunburst-tooltip"></div>
+                    <div id="sunburstCenter" class="sunburst-center-label">
+                        <span class="sunburst-center-val">{sum(m[1] for m in modules):,}</span>
+                        <span class="sunburst-center-text">Artifacts</span>
+                    </div>
                 </div>
-                <div class="stat-info">
-                    <h3>Active Cases</h3>
-                    <div class="stat-value">{stats.get('active_cases', 3)}</div>
-                </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {{
+                        if (typeof initSunburst === 'function') initSunburst({chart_data});
+                    }});
+                </script>
             </div>
 
-            <div class="stat-card">
-                <div class="stat-icon" style="background: rgba(59, 130, 246, 0.2);">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2">
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-                    </svg>
+            <!-- Key Metrics Column -->
+            <div class="dash-metrics-col">
+                <div class="dash-metric-card card" onclick="switchTab('hash')" style="cursor:pointer;">
+                    <div class="dash-metric-icon" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line>
+                            <line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line>
+                        </svg>
+                    </div>
+                    <div class="dash-metric-info">
+                        <span class="dash-metric-val">{stats.get('files_hashed', 0):,}</span>
+                        <span class="dash-metric-label">Files Hashed</span>
+                    </div>
+                    {f'<span class="dash-metric-alert">{stats.get("malware_detected", 0)} malware</span>' if stats.get('malware_detected', 0) > 0 else ''}
                 </div>
-                <div class="stat-info">
-                    <h3>Evidence Items</h3>
-                    <div class="stat-value">{stats.get('evidence_items', 0)}</div>
+                <div class="dash-metric-card card" onclick="switchTab('pii')" style="cursor:pointer;">
+                    <div class="dash-metric-icon" style="background: rgba(236, 72, 153, 0.1); color: #ec4899;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <div class="dash-metric-info">
+                        <span class="dash-metric-val">{stats.get('pii_items', 0):,}</span>
+                        <span class="dash-metric-label">PII Exposed</span>
+                    </div>
                 </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon" style="background: rgba(168, 85, 247, 0.2);">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                    </svg>
+                <div class="dash-metric-card card" onclick="switchTab('encrypted')" style="cursor:pointer;">
+                    <div class="dash-metric-icon" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </div>
+                    <div class="dash-metric-info">
+                        <span class="dash-metric-val">{stats.get('encrypted_files', 0):,}</span>
+                        <span class="dash-metric-label">Encrypted Files</span>
+                    </div>
                 </div>
-                <div class="stat-info">
-                    <h3>Analysis Logs</h3>
-                    <div class="stat-value">{stats.get('analysis_logs', 3)}</div>
+                <div class="dash-metric-card card" onclick="switchTab('browser')" style="cursor:pointer;">
+                    <div class="dash-metric-icon" style="background: rgba(6, 182, 212, 0.1); color: #06b6d4;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                        </svg>
+                    </div>
+                    <div class="dash-metric-info">
+                        <span class="dash-metric-val">{stats.get('browser_entries', 0):,}</span>
+                        <span class="dash-metric-label">Browser Entries</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Main Dashboard Grid -->
-        <div class="dashboard-grid">
-            <!-- Left Column: Quick Actions + Cases -->
-            <div class="dashboard-col-main">
-                <!-- Quick Actions -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Quick Actions</h2>
-                    </div>
-                    <div class="quick-actions-grid">
-                        <button class="quick-action-btn" onclick="switchTab('commands')">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="4 17 10 11 4 5"></polyline>
-                                <line x1="12" y1="19" x2="20" y2="19"></line>
-                            </svg>
-                            <span>OS Commands</span>
-                            <p>Execute system commands</p>
-                        </button>
-
-                        <button class="quick-action-btn" onclick="switchTab('hash')">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="4" y1="9" x2="20" y2="9"></line>
-                                <line x1="4" y1="15" x2="20" y2="15"></line>
-                                <line x1="10" y1="3" x2="8" y2="21"></line>
-                                <line x1="16" y1="3" x2="14" y2="21"></line>
-                            </svg>
-                            <span>Hash Analysis</span>
-                            <p>File integrity checks</p>
-                        </button>
-
-                        <button class="quick-action-btn" onclick="switchTab('pii')">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                                <line x1="8" y1="21" x2="16" y2="21"></line>
-                                <line x1="12" y1="17" x2="12" y2="21"></line>
-                                <circle cx="12" cy="10" r="3"></circle>
-                            </svg>
-                            <span>PII Detection</span>
-                            <p>Privacy data scanner</p>
-                        </button>
-
-                        <button class="quick-action-btn" onclick="switchTab('browser')">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <circle cx="12" cy="12" r="4"></circle>
-                                <line x1="21.17" y1="8" x2="12" y2="8"></line>
-                                <line x1="3.95" y1="6.06" x2="8.54" y2="14"></line>
-                                <line x1="10.88" y1="21.94" x2="15.46" y2="14"></line>
-                            </svg>
-                            <span>Browser History</span>
-                            <p>Web activity analysis</p>
-                        </button>
-
-                        <button class="quick-action-btn" onclick="switchTab('registry')">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                                <polyline points="13 2 13 9 20 9"></polyline>
-                                <line x1="8" y1="13" x2="16" y2="13"></line>
-                                <line x1="8" y1="17" x2="16" y2="17"></line>
-                            </svg>
-                            <span>Registry Analysis</span>
-                            <p>Windows registry artifacts</p>
-                        </button>
-
-                        <button class="quick-action-btn" onclick="switchTab('eventlog')">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8l-6-6z"></path>
-                                <path d="M14 3v5h5M16 13H8M16 17H8M10 9H8"></path>
-                            </svg>
-                            <span>Event Logs</span>
-                            <p>Security & system events</p>
-                        </button>
-
-                        <button class="quick-action-btn" onclick="switchTab('encrypted')">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                            </svg>
-                            <span>Encrypted Files</span>
-                            <p>Detect encrypted data</p>
-                        </button>
-
-                        <button class="quick-action-btn" onclick="switchTab('regex')">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                            </svg>
-                            <span>Regex Analysis</span>
-                            <p>Pattern matching IOCs</p>
-                        </button>
-
-                        <button class="quick-action-btn" onclick="switchTab('ioc')">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                                <line x1="12" y1="9" x2="12" y2="13"></line>
-                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                            </svg>
-                            <span>IOC Scanner</span>
-                            <p>Threat intelligence</p>
-                        </button>
-
-                        <button class="quick-action-btn" onclick="alert('Network analysis coming soon!')">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <line x1="2" y1="12" x2="22" y2="12"></line>
-                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-                            </svg>
-                            <span>Network Analysis</span>
-                            <p>Connection monitoring</p>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Active Cases Overview -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="3" width="7" height="7"></rect>
-                                <rect x="14" y="14" width="7" height="7"></rect>
-                                <rect x="3" y="14" width="7" height="7"></rect>
-                            </svg>
-                            Active Cases
-                        </h2>
-                        <button class="view-all-btn">View All →</button>
-                    </div>
-                    <div class="case-list">
-                        <div class="case-item">
-                            <div class="case-header">
-                                <span class="case-id">CASE-2024-001</span>
-                                <span class="case-badge critical">critical</span>
-                            </div>
-                            <h3>System Forensic Analysis - {stats.get('timestamp', 'N/A')}</h3>
-                            <div class="case-footer">
-                                <span class="case-status">In progress</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Analysis Modules Grid -->
+        <div class="card" style="margin-top: 1.5rem;">
+            <div class="card-header">
+                <h2>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.5;">
+                        <rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Analysis Modules
+                </h2>
             </div>
-
-            <!-- Right Column: Recent Activity -->
-            <div class="dashboard-col-sidebar">
-                <!-- Recent Activity -->
-                <div class="card">
-                    <div class="card-header">
-                        <h2>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                            </svg>
-                            Recent Activity
-                        </h2>
-                    </div>
-                    <div class="activity-list">
-                        {generate_activity_items(recent_activity)}
-                    </div>
-                </div>
+            <div class="dash-modules-grid">
+                {module_cards}
             </div>
         </div>
     </div>
@@ -576,27 +564,134 @@ def generate_dashboard_tab(stats, recent_activity, system_status):
     return html
 
 
-def generate_activity_items(activity_list):
-    """Generate HTML for activity items"""
-    if not activity_list or len(activity_list) == 0:
-        return '<p class="no-activity">No recent activity</p>'
+def _build_module_cards(stats):
+    """Build the analysis module cards for the dashboard grid."""
+    modules = [
+        {
+            'name': 'OS Commands',
+            'tab': 'commands',
+            'icon': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>',
+            'color': '#3b82f6',
+            'primary': f'{stats.get("commands_executed", 0)} commands',
+            'secondary': f'{stats.get("total_cases", 0)} categories',
+        },
+        {
+            'name': 'Hash Analysis',
+            'tab': 'hash',
+            'icon': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>',
+            'color': '#8b5cf6',
+            'primary': f'{stats.get("files_hashed", 0):,} files scanned',
+            'secondary': f'{stats.get("malware_detected", 0)} malware, {stats.get("suspicious_files", 0)} suspicious',
+            'alert': stats.get('malware_detected', 0) > 0,
+        },
+        {
+            'name': 'IOC Scanner',
+            'tab': 'ioc',
+            'icon': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+            'color': '#ef4444',
+            'primary': f'{stats.get("total_iocs", 0)} IOCs detected',
+            'secondary': f'Threat: {stats.get("threat_level", "Low")}',
+            'alert': stats.get('threat_score', 0) > 50,
+        },
+        {
+            'name': 'Regex Analysis',
+            'tab': 'regex',
+            'icon': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>',
+            'color': '#f97316',
+            'primary': f'Score: {stats.get("threat_score", 0)}/100',
+            'secondary': f'{stats.get("total_iocs", 0)} patterns matched',
+        },
+        {
+            'name': 'PII Detection',
+            'tab': 'pii',
+            'icon': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+            'color': '#ec4899',
+            'primary': f'{stats.get("pii_items", 0):,} PII items',
+            'secondary': f'{stats.get("pii_files", 0)} files affected',
+            'alert': stats.get('pii_items', 0) > 0,
+        },
+        {
+            'name': 'Browser History',
+            'tab': 'browser',
+            'icon': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4"></circle><line x1="21.17" y1="8" x2="12" y2="8"></line></svg>',
+            'color': '#06b6d4',
+            'primary': f'{stats.get("browser_entries", 0):,} entries',
+            'secondary': f'{stats.get("browsers_found", 0)} browsers detected',
+        },
+        {
+            'name': 'Encrypted Files',
+            'tab': 'encrypted',
+            'icon': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>',
+            'color': '#f59e0b',
+            'primary': f'{stats.get("encrypted_files", 0)} encrypted',
+            'secondary': f'{stats.get("encrypted_scanned", 0):,} scanned',
+        },
+        {
+            'name': 'Memory Analysis',
+            'tab': 'memory',
+            'icon': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2" ry="2"></rect><path d="M6 12h.01M10 12h.01M14 12h.01M18 12h.01"></path></svg>',
+            'color': '#a78bfa',
+            'primary': stats.get('memory_total', 'N/A'),
+            'secondary': 'System memory profile',
+        },
+    ]
 
-    html = ''
-    for activity in activity_list[:5]:
-        html += f'''
-        <div class="activity-item">
-            <div class="activity-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                </svg>
-            </div>
-            <div class="activity-content">
-                <p>{activity.get('type', 'analysis')}</p>
-                <span>{activity.get('matches', 0)} matches found</span>
-            </div>
-        </div>
-        '''
-    return html
+    # Conditionally add Windows-only modules
+    if stats.get('registry_artifacts', 0) > 0 or stats.get('os_type') == 'Windows':
+        modules.append({
+            'name': 'Registry',
+            'tab': 'registry',
+            'icon': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>',
+            'color': '#10b981',
+            'primary': f'{stats.get("registry_artifacts", 0):,} artifacts',
+            'secondary': 'Windows registry',
+        })
+    if stats.get('eventlog_anomalies', 0) > 0 or stats.get('os_type') == 'Windows':
+        modules.append({
+            'name': 'Event Logs',
+            'tab': 'eventlog',
+            'icon': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8l-6-6z"></path><path d="M14 3v5h5M16 13H8M16 17H8M10 9H8"></path></svg>',
+            'color': '#f97316',
+            'primary': f'{stats.get("eventlog_anomalies", 0)} anomalies',
+            'secondary': 'Security events',
+            'alert': stats.get('eventlog_anomalies', 0) > 0,
+        })
+    if stats.get('mft_deleted', 0) > 0 or stats.get('os_type') == 'Windows':
+        modules.append({
+            'name': 'MFT Analysis',
+            'tab': 'mft',
+            'icon': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>',
+            'color': '#a855f7',
+            'primary': f'{stats.get("mft_deleted", 0)} deleted files',
+            'secondary': f'{stats.get("mft_timestomped", 0)} timestomped',
+            'alert': stats.get('mft_timestomped', 0) > 0,
+        })
+    if stats.get('pagefile_strings', 0) > 0 or stats.get('os_type') == 'Windows':
+        modules.append({
+            'name': 'Pagefile',
+            'tab': 'pagefile',
+            'icon': '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>',
+            'color': '#14b8a6',
+            'primary': f'{stats.get("pagefile_strings", 0):,} strings',
+            'secondary': 'Virtual memory forensics',
+        })
+
+    cards_html = ''
+    for m in modules:
+        alert_class = ' dash-module-alert' if m.get('alert') else ''
+        cards_html += f'''
+            <div class="dash-module-card{alert_class}" onclick="switchTab('{m['tab']}')" style="--module-color: {m['color']};">
+                <div class="dash-module-icon" style="background: {m['color']}20; color: {m['color']};">
+                    {m['icon']}
+                </div>
+                <div class="dash-module-info">
+                    <span class="dash-module-name">{m['name']}</span>
+                    <span class="dash-module-primary">{m['primary']}</span>
+                    <span class="dash-module-secondary">{m['secondary']}</span>
+                </div>
+                <svg class="dash-module-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </div>'''
+    return cards_html
 
 
 def generate_os_commands_tab(os_results, os_type="Windows", linux_results=None, macos_results=None):

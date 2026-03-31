@@ -31,7 +31,6 @@ from templates.html_generator import (
     generate_html_footer,
     generate_threat_dashboard,
     generate_dashboard_tab,
-    generate_activity_items,
     generate_os_commands_tab,
     generate_os_command_sections,
     generate_hash_tab_interactive,
@@ -466,12 +465,39 @@ class ForensicCollector:
             # Calculate actual statistics from collected data
             file_hashes = getattr(self, 'file_hashes', [])
             total_evidence = len(self.os_results) + len(file_hashes) + len(browser_results)
+            pagefile_stats = pagefile_analyzer.get_statistics() if hasattr(pagefile_analyzer, 'get_statistics') else {}
             stats = {
-                'total_cases': len(self.os_results),  # Number of command categories processed
-                'active_cases': len(self.os_results),  # Same as total for live analysis
+                'total_cases': len(self.os_results),
+                'active_cases': len(self.os_results),
                 'evidence_items': total_evidence,
                 'analysis_logs': len(self.activity_log),
-                'timestamp': self.timestamp
+                'timestamp': self.timestamp,
+                'os_type': self.current_os,
+                'threat_score': self.regex_results.get('threat_score', 0),
+                'threat_level': self.regex_results.get('threat_level', 'Low'),
+                'total_iocs': len(self.regex_results.get('iocs', [])),
+                'ioc_severity': getattr(self, 'ioc_results', {}).get('severity_counts', {'CRITICAL': 0, 'HIGH': 0, 'MEDIUM': 0, 'LOW': 0}),
+                'files_hashed': len(file_hashes),
+                'malware_detected': len(getattr(self, 'malware_detections', [])),
+                'suspicious_files': len(getattr(self, 'suspicious_files', [])),
+                'pii_files': pii_results.get('total_files_with_pii', 0) if isinstance(pii_results, dict) else 0,
+                'pii_items': pii_results.get('total_pii_items', 0) if isinstance(pii_results, dict) else 0,
+                'encrypted_files': encrypted_scanner.stats.get('encrypted_found', 0),
+                'encrypted_scanned': encrypted_scanner.stats.get('total_scanned', 0),
+                'browser_entries': self.browser_stats.get('total_entries', 0),
+                'browsers_found': self.browser_stats.get('browsers_found', 0),
+                'commands_executed': sum(len(cmds) for cmds in self.os_results.values()) if self.os_results else 0,
+                'registry_artifacts': registry_stats.get('total_artifacts', 0),
+                'mft_deleted': mft_stats.get('deleted_files', 0),
+                'mft_timestomped': mft_stats.get('timestomped', 0),
+                'pagefile_strings': pagefile_stats.get('strings_extracted', 0),
+                'eventlog_anomalies': self.eventlog_stats.get('total_anomalies', 0),
+                'memory_total': 'N/A',
+                'modules_active': sum(1 for v in [
+                    self.os_results, file_hashes, self.regex_results.get('iocs'),
+                    browser_results, pii_results if isinstance(pii_results, dict) and pii_results.get('total_pii_items') else None,
+                    encrypted_scanner.stats.get('total_scanned', 0),
+                ] if v),
             }
             f.write(generate_dashboard_tab(stats, self.activity_log, {}))
 
@@ -564,8 +590,8 @@ class ForensicCollector:
             # Generate IOC Scanner Tab
             f.write(generate_ioc_scanner_tab(ioc_results))
 
-            # Write HTML footer
-            f.write(generate_html_footer(assets_path))
+            # Write HTML footer with system info
+            f.write(generate_html_footer(assets_path, stats=stats))
 
         return html_file
 
@@ -1062,7 +1088,34 @@ def run_forensic_collection():
             'active_cases': len(os_results),
             'evidence_items': 0,
             'analysis_logs': len(activity_log),
-            'timestamp': timestamp
+            'timestamp': timestamp,
+            'os_type': current_os,
+            # Real analysis data for dashboard
+            'threat_score': regex_results.get('threat_score', 0),
+            'threat_level': regex_results.get('threat_level', 'Low'),
+            'total_iocs': len(regex_results.get('iocs', [])),
+            'ioc_severity': ioc_results.get('severity_counts', {'CRITICAL': 0, 'HIGH': 0, 'MEDIUM': 0, 'LOW': 0}),
+            'files_hashed': len(file_hashes) if file_hashes else 0,
+            'malware_detected': len(getattr(hash_analyzer, 'malware_detections', [])),
+            'suspicious_files': len(getattr(hash_analyzer, 'suspicious_files', [])),
+            'pii_files': pii_results.get('total_files_with_pii', 0) if isinstance(pii_results, dict) else 0,
+            'pii_items': pii_results.get('total_pii_items', 0) if isinstance(pii_results, dict) else 0,
+            'encrypted_files': encrypted_scanner.stats.get('encrypted_found', 0),
+            'encrypted_scanned': encrypted_scanner.stats.get('total_scanned', 0),
+            'browser_entries': browser_stats.get('total_entries', 0),
+            'browsers_found': browser_stats.get('browsers_found', 0),
+            'commands_executed': sum(len(cmds) for cmds in os_results.values()) if os_results else 0,
+            'registry_artifacts': registry_stats.get('total_artifacts', 0) if registry_stats else 0,
+            'mft_deleted': mft_stats.get('deleted_files', 0) if mft_stats else 0,
+            'mft_timestomped': mft_stats.get('timestomped', 0) if mft_stats else 0,
+            'pagefile_strings': pagefile_stats.get('strings_extracted', 0) if pagefile_stats else 0,
+            'eventlog_anomalies': eventlog_stats.get('total_anomalies', 0) if eventlog_stats else 0,
+            'memory_total': memory_data.get('summary', {}).get('total_ram_human', 'N/A'),
+            'modules_active': sum(1 for v in [
+                os_results, file_hashes, regex_results.get('iocs'),
+                browser_history, pii_results if isinstance(pii_results, dict) and pii_results.get('total_pii_items') else None,
+                encrypted_scanner.stats.get('total_scanned', 0),
+            ] if v),
         }
         f.write(generate_dashboard_tab(stats, activity_log, {}))
 
@@ -1152,8 +1205,8 @@ def run_forensic_collection():
         # Generate IOC Scanner Tab (NEW FUNCTIONAL VERSION WITH RESULTS)
         f.write(generate_ioc_scanner_tab(ioc_results))
 
-        # Write HTML footer
-        f.write(generate_html_footer(assets_path))
+        # Write HTML footer with system info
+        f.write(generate_html_footer(assets_path, stats=stats))
 
     print(f"\n[+] Done! Open the HTML report:")
     print(f"[*] {html_file}")
