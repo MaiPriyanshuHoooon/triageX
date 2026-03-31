@@ -3,7 +3,7 @@
 # ─────────────────────────────────────────────────────────────
 #  Builds native packages on every tag push or manual dispatch:
 #    Windows  → ForensicTool.exe  (one-dir + zip)
-#    macOS    → ForensicTool.app  (bundled in .dmg)
+#    macOS    → ForensicTool.dmg  (app bundle in DMG)
 #    Linux    → ForensicTool      (one-file binary)
 #
 #  Artifacts are uploaded to the GitHub Release automatically.
@@ -14,8 +14,8 @@ name: Build & Release
 on:
   push:
     tags:
-      - "v*"            # Trigger on version tags: v2.0.0, v2.1.0, etc.
-  workflow_dispatch:     # Manual trigger from GitHub UI
+      - "v*"
+  workflow_dispatch:
     inputs:
       version:
         description: "Version label (e.g. 2.0.0-beta)"
@@ -23,7 +23,7 @@ on:
         default: "dev"
 
 permissions:
-  contents: write        # Needed for creating releases
+  contents: write
 
 jobs:
   # ── Windows Build ──────────────────────────────────────────
@@ -89,20 +89,81 @@ jobs:
           pip install requests cryptography PyQt6 PyQt6-Qt6 PyQt6-sip psutil watchdog
           pip install PyPDF2 python-docx openpyxl Pillow pytesseract pandas opencv-python
           brew install tesseract || true
+          brew install create-dmg || true
 
       - name: Build macOS .app
         run: python build.py --target macos --mode onedir
 
-      - name: Package distribution
+      - name: Create launcher script
         run: |
-          cd dist
-          zip -r --symlinks ForensicTool-macOS-arm64.zip ForensicTool.app/
+          # Create a wrapper script that asks for admin and launches the app
+          cat > dist/triageX-Launcher.command << 'LAUNCHER'
+          #!/bin/bash
+          # ─────────────────────────────────────────────────────
+          #  triageX Forensic Tool — macOS Launcher
+          # ─────────────────────────────────────────────────────
+          #  Double-click this file to launch triageX.
+          #  It will ask for your password to get full
+          #  forensic access (disk, network, processes).
+          # ─────────────────────────────────────────────────────
+
+          SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+          APP_PATH="$SCRIPT_DIR/ForensicTool.app"
+
+          if [ ! -d "$APP_PATH" ]; then
+              osascript -e 'display dialog "ForensicTool.app not found.\nMake sure it is in the same folder as this launcher." with title "triageX" buttons {"OK"} default button "OK" with icon stop'
+              exit 1
+          fi
+
+          # Remove quarantine attribute so macOS doesn't block it
+          xattr -rd com.apple.quarantine "$APP_PATH" 2>/dev/null
+
+          # Ask for password and launch with elevated privileges
+          osascript -e "do shell script \"open '$APP_PATH'\" with administrator privileges"
+          LAUNCHER
+          chmod +x dist/triageX-Launcher.command
+
+      - name: Create DMG
+        run: |
+          # Create a nice DMG with the app + launcher
+          create-dmg \
+            --volname "triageX Forensic Tool" \
+            --volicon "assets/icon.icns" \
+            --window-pos 200 120 \
+            --window-size 660 400 \
+            --icon-size 80 \
+            --icon "ForensicTool.app" 180 170 \
+            --icon "triageX-Launcher.command" 480 170 \
+            --icon ".README.txt" 330 310 \
+            --hide-extension "ForensicTool.app" \
+            --app-drop-link 330 170 \
+            --background "assets/dmg_bg.png" \
+            "dist/ForensicTool-macOS-arm64.dmg" \
+            "dist/" \
+          || {
+            echo "create-dmg with custom layout failed, trying simple DMG..."
+            # Fallback: simple DMG without background image
+            create-dmg \
+              --volname "triageX Forensic Tool" \
+              --window-pos 200 120 \
+              --window-size 600 380 \
+              --icon-size 80 \
+              --icon "ForensicTool.app" 150 170 \
+              --icon "triageX-Launcher.command" 450 170 \
+              --app-drop-link 300 170 \
+              "dist/ForensicTool-macOS-arm64.dmg" \
+              "dist/" \
+            || {
+              echo "create-dmg failed entirely, falling back to hdiutil..."
+              hdiutil create -volname "triageX" -srcfolder dist/ -ov -format UDZO "dist/ForensicTool-macOS-arm64.dmg"
+            }
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ForensicTool-macOS-arm64
-          path: dist/ForensicTool-macOS-*
+          path: dist/ForensicTool-macOS-arm64.dmg
 
   # ── Linux Build ────────────────────────────────────────────
   build-linux:
@@ -181,22 +242,31 @@ jobs:
             | Platform | File | How to Run |
             |----------|------|------------|
             | **Windows** | `ForensicTool-Windows-x64.zip` | Extract → Right-click `.exe` → Run as Administrator |
-            | **macOS** | `ForensicTool-macOS-arm64.zip` | Extract → Right-click app → Open → `sudo` from Terminal |
+            | **macOS** | `ForensicTool-macOS-arm64.dmg` | Double-click DMG → Double-click **triageX-Launcher** → Enter password |
             | **Linux** | `ForensicTool-Linux-x64.tar.gz` | Extract → `chmod +x ForensicTool` → `sudo ./ForensicTool` |
+
+            ### macOS Users
+            - Open the `.dmg` file — no Terminal commands needed
+            - Double-click **triageX-Launcher.command** inside the DMG
+            - macOS will ask for your password to grant forensic access
+            - If blocked by Gatekeeper: System Settings → Privacy & Security → Open Anyway
+            - Optionally drag `ForensicTool.app` to your Applications folder
 
             ### Requirements
             - Elevated privileges (Administrator / root / sudo)
             - 4 GB RAM minimum
             - 500 MB free disk space
 
-            ### What's New
-            - Cross-platform support (Windows, macOS, Linux)
-            - Memory analysis module
-            - Auto OS detection
-            - Modern PyQt6 interface
+            ### What's New in ${{ github.ref_name }}
+            - Interactive dashboard with multi-ring sunburst chart
+            - Threat score visualization (clamped 0-100 scale)
+            - System info displayed in persistent footer bar
+            - Analysis module cards with real-time data
+            - macOS DMG installer (no Terminal needed)
+            - Node 20+ CI/CD pipeline
           files: |
             ForensicTool-Windows-x64/*.zip
-            ForensicTool-macOS-arm64/*
+            ForensicTool-macOS-arm64/*.dmg
             ForensicTool-Linux-x64/*.tar.gz
           draft: false
           prerelease: false

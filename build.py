@@ -38,7 +38,7 @@ from pathlib import Path
 
 # -- Constants ------------------------------------------------------
 APP_NAME = "ForensicTool"
-APP_VERSION = "2.0.0"
+APP_VERSION = "2.0.2"
 APP_ID = "com.triagex.forensictool"
 ENTRY_POINT = "main.py"                        # PyQt6 entry point
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -256,8 +256,8 @@ def build_windows(mode="onedir"):
 
 # -- macOS Build ---------------------------------------------------
 def build_macos(mode="onedir"):
-    """Build macOS .app bundle."""
-    total = 5
+    """Build macOS .app bundle and DMG."""
+    total = 7
     step(1, total, "Preparing macOS build...")
 
     hidden = _hidden_imports("macOS")
@@ -316,16 +316,110 @@ def build_macos(mode="onedir"):
     else:
         fail("Build output not found")
 
-    step(4, total, "Writing distribution README...")
+    step(4, total, "Creating launcher script...")
+    _create_macos_launcher(PROJECT_ROOT / "dist")
+
+    step(5, total, "Writing distribution README...")
     write_readme("macOS", PROJECT_ROOT / "dist")
 
-    step(5, total, "Build complete!")
-    output = app_bundle or app_dir
+    step(6, total, "Creating DMG...")
+    dmg_path = _create_dmg(PROJECT_ROOT / "dist")
+    if dmg_path:
+        ok(f"DMG: {dmg_path}")
+
+    step(7, total, "Build complete!")
+    output = dmg_path or app_bundle or app_dir
     print(f"\n  {C_GREEN}{'='*50}")
     print(f"   Output: {output}")
-    print(f"   Run:    sudo open {APP_NAME}.app")
+    print(f"   Open the DMG and double-click triageX-Launcher")
     print(f"  {'='*50}{C_RESET}\n")
     return output
+
+
+def _create_macos_launcher(dist_dir):
+    """Create a .command launcher that asks for admin password via GUI."""
+    launcher = dist_dir / "triageX-Launcher.command"
+    launcher.write_text(
+        '#!/bin/bash\n'
+        '# ─────────────────────────────────────────────────────\n'
+        '#  triageX Forensic Tool — macOS Launcher\n'
+        '# ─────────────────────────────────────────────────────\n'
+        '#  Double-click to launch. Asks for your password\n'
+        '#  so triageX gets full forensic access.\n'
+        '# ─────────────────────────────────────────────────────\n'
+        '\n'
+        'SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"\n'
+        'APP_PATH="$SCRIPT_DIR/ForensicTool.app"\n'
+        '\n'
+        'if [ ! -d "$APP_PATH" ]; then\n'
+        '    osascript -e \'display dialog "ForensicTool.app not found.\\n'
+        'Make sure it is in the same folder as this launcher." '
+        'with title "triageX" buttons {"OK"} default button "OK" with icon stop\'\n'
+        '    exit 1\n'
+        'fi\n'
+        '\n'
+        '# Remove quarantine so Gatekeeper does not block it\n'
+        'xattr -rd com.apple.quarantine "$APP_PATH" 2>/dev/null\n'
+        '\n'
+        '# Ask for password and launch with elevated privileges\n'
+        'osascript -e "do shell script \\"open \'$APP_PATH\'\\" '
+        'with administrator privileges"\n',
+        encoding="utf-8",
+    )
+    os.chmod(str(launcher), 0o755)
+    ok("Launcher: triageX-Launcher.command")
+
+
+def _create_dmg(dist_dir):
+    """Package the .app + launcher into a .dmg using create-dmg or hdiutil."""
+    dmg_name = f"{APP_NAME}-macOS-arm64.dmg"
+    dmg_path = dist_dir / dmg_name
+
+    # Remove old DMG if present
+    if dmg_path.exists():
+        dmg_path.unlink()
+
+    # Try create-dmg first (prettier result)
+    if shutil.which("create-dmg"):
+        icns = PROJECT_ROOT / "assets" / "icon.icns"
+        cmd = [
+            "create-dmg",
+            "--volname", "triageX Forensic Tool",
+            "--window-pos", "200", "120",
+            "--window-size", "600", "380",
+            "--icon-size", "80",
+            "--icon", f"{APP_NAME}.app", "150", "170",
+            "--icon", "triageX-Launcher.command", "450", "170",
+            "--app-drop-link", "300", "170",
+        ]
+        if icns.exists():
+            cmd.extend(["--volicon", str(icns)])
+
+        cmd.extend([str(dmg_path), str(dist_dir)])
+
+        try:
+            run(cmd)
+            if dmg_path.exists():
+                return dmg_path
+        except Exception as exc:
+            warn(f"create-dmg failed ({exc}), falling back to hdiutil")
+
+    # Fallback: hdiutil (always available on macOS)
+    try:
+        run([
+            "hdiutil", "create",
+            "-volname", "triageX",
+            "-srcfolder", str(dist_dir),
+            "-ov", "-format", "UDZO",
+            str(dmg_path),
+        ])
+        if dmg_path.exists():
+            return dmg_path
+    except Exception as exc:
+        warn(f"hdiutil also failed ({exc})")
+
+    warn("Could not create DMG — .app bundle is still available")
+    return None
 
 
 # -- Linux Build ---------------------------------------------------
@@ -430,11 +524,12 @@ def write_readme(target_os, dist_dir):
             "  4. Click 'Start Collection'\n"
         ),
         "macOS": (
-            "  1. Open Terminal\n"
-            "  2. Run: sudo open ForensicTool.app\n"
-            "     (or drag to Applications, right-click -> Open)\n"
-            "  3. Grant Full Disk Access in System Settings -> Privacy\n"
-            "  4. Activate license or start trial\n"
+            "  1. Open the .dmg file\n"
+            "  2. Double-click 'triageX-Launcher.command'\n"
+            "  3. Enter your password when prompted\n"
+            "     (this grants forensic-level access)\n"
+            "  4. If blocked: System Settings -> Privacy & Security -> Open Anyway\n"
+            "  5. Optionally drag ForensicTool.app to Applications\n"
         ),
         "Linux": (
             "  1. Open Terminal\n"
