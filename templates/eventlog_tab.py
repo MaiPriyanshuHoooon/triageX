@@ -32,7 +32,7 @@ def generate_eventlog_tab(eventlog_data, eventlog_stats):
     <div id="tab-eventlog" class="tab-content">
         <div class="analysis-header">
             <div class="header-left">
-                <h1>📊 Event Log Analysis</h1>
+                <h1>Event Log Analysis</h1>
                 <p>Windows Event Log forensic timeline and anomaly detection</p>
             </div>
         </div>
@@ -44,7 +44,9 @@ def generate_eventlog_tab(eventlog_data, eventlog_stats):
         <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);
                     border-radius: 12px; padding: 24px; margin: 20px 0;">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <div style="font-size: 48px;">ℹ️</div>
+                <div style="color: #3b82f6;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </div>
                 <div>
                     <h3 style="margin: 0 0 8px 0; color: #3b82f6;">Event Log Analysis Unavailable</h3>
                     <p style="margin: 0; color: #9ca3af; line-height: 1.6;">
@@ -100,7 +102,7 @@ def generate_eventlog_tab(eventlog_data, eventlog_stats):
                 <div class="command-card" style="border: 2px solid rgba(239, 68, 68, 0.5);">
                     <div class="command-card-header" onclick="toggleCommandOutput(this)" style="background: rgba(239, 68, 68, 0.1);">
                         <div class="command-title">
-                            <span class="cmd-type-badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">⚠️ ANOMALIES</span>
+                            <span class="cmd-type-badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">ANOMALIES</span>
                             <span>Suspicious Activity Detected</span>
                         </div>
                         <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -117,7 +119,7 @@ def generate_eventlog_tab(eventlog_data, eventlog_stats):
                 html += f'''
                             <div style="margin-bottom: 24px;">
                                 <h3 style="color: #ef4444; margin-bottom: 12px;">
-                                    🔴 Brute Force Login Attempts ({len(brute_force)})
+                                    Brute Force Login Attempts ({len(brute_force)})
                                 </h3>
                                 <table class="data-table" style="width: 100%;">
                                     <thead>
@@ -160,7 +162,7 @@ def generate_eventlog_tab(eventlog_data, eventlog_stats):
                 html += f'''
                             <div style="margin-bottom: 24px;">
                                 <h3 style="color: #f59e0b; margin-bottom: 12px;">
-                                    🟠 Suspicious PowerShell Commands ({len(ps_anomalies)})
+                                    Suspicious PowerShell Commands ({len(ps_anomalies)})
                                 </h3>
                                 <table class="data-table" style="width: 100%;">
                                     <thead>
@@ -202,7 +204,7 @@ def generate_eventlog_tab(eventlog_data, eventlog_stats):
                 html += f'''
                             <div style="margin-bottom: 24px;">
                                 <h3 style="color: #ef4444; margin-bottom: 12px;">
-                                    🔴 Suspicious Service Installations ({len(services)})
+                                    Suspicious Service Installations ({len(services)})
                                 </h3>
                                 <table class="data-table" style="width: 100%;">
                                     <thead>
@@ -242,7 +244,7 @@ def generate_eventlog_tab(eventlog_data, eventlog_stats):
                 html += f'''
                             <div style="margin-bottom: 24px;">
                                 <h3 style="color: #ef4444; margin-bottom: 12px;">
-                                    🔴 Privilege Escalation Events ({len(priv_esc)})
+                                    Privilege Escalation Events ({len(priv_esc)})
                                 </h3>
                                 <table class="data-table" style="width: 100%;">
                                     <thead>
@@ -280,7 +282,7 @@ def generate_eventlog_tab(eventlog_data, eventlog_stats):
                 html += f'''
                             <div style="margin-bottom: 24px;">
                                 <h3 style="color: #f59e0b; margin-bottom: 12px;">
-                                    🟠 Remote Access Activity ({len(remote)})
+                                    Remote Access Activity ({len(remote)})
                                 </h3>
                                 <table class="data-table" style="width: 100%;">
                                     <thead>
@@ -318,7 +320,7 @@ def generate_eventlog_tab(eventlog_data, eventlog_stats):
                 html += f'''
                             <div style="margin-bottom: 24px;">
                                 <h3 style="color: #3b82f6; margin-bottom: 12px;">
-                                    🔵 USB Device Activity ({len(usb)})
+                                    USB Device Activity ({len(usb)})
                                 </h3>
                                 <table class="data-table" style="width: 100%;">
                                     <thead>
@@ -356,7 +358,7 @@ def generate_eventlog_tab(eventlog_data, eventlog_stats):
                 html += f'''
                             <div style="margin-bottom: 24px;">
                                 <h3 style="color: #8b5cf6; margin-bottom: 12px;">
-                                    🟣 Unusual Logon Times ({len(unusual)})
+                                    Unusual Logon Times ({len(unusual)})
                                 </h3>
                                 <p style="color: #9ca3af; margin-bottom: 12px;">Logons occurring between 11 PM and 6 AM</p>
                                 <table class="data-table" style="width: 100%;">

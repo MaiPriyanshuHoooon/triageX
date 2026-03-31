@@ -346,10 +346,10 @@ def get_recovery_icon(recovery_status: str) -> str:
     """
 
     status_icons = {
-        'FULL': '✅',
-        'PARTIAL': '⚠️',
+        'FULL': '[+]',
+        'PARTIAL': '[!]',
         'METADATA_ONLY': '📋',
-        'OVERWRITTEN': '❌',
+        'OVERWRITTEN': '[ERROR]',
         'UNKNOWN': '❓'
     }
 

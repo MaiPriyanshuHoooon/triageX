@@ -233,13 +233,13 @@ class RegexAnalyzer:
 
         # Determine threat level based on score
         if results['threat_score'] >= 100:
-            results['threat_level'] = '🔴 Critical'
+            results['threat_level'] = 'Critical'
         elif results['threat_score'] >= 50:
-            results['threat_level'] = '🟠 High'
+            results['threat_level'] = 'High'
         elif results['threat_score'] >= 20:
-            results['threat_level'] = '🟡 Medium'
+            results['threat_level'] = 'Medium'
         else:
-            results['threat_level'] = '🟢 Low'
+            results['threat_level'] = 'Low'
 
         return results
 
@@ -261,17 +261,17 @@ class RegexAnalyzer:
     def _get_severity(self, category):
         """Get severity level for a suspicious pattern category"""
         severity_map = {
-            'credentials': '🔴 Critical',
-            'malware_indicators': '🔴 Critical',
-            'injection_attacks': '🟠 High',
-            'suspicious_commands': '🟠 High',
-            'obfuscation': '🟡 Medium',
-            'persistence_mechanisms': '🟠 High',
-            'file_indicators': '🟠 High',
-            'network_indicators': '🟡 Medium',
-            'data_exfiltration': '🔴 Critical'
+            'credentials': 'Critical',
+            'malware_indicators': 'Critical',
+            'injection_attacks': 'High',
+            'suspicious_commands': 'High',
+            'obfuscation': 'Medium',
+            'persistence_mechanisms': 'High',
+            'file_indicators': 'High',
+            'network_indicators': 'Medium',
+            'data_exfiltration': 'Critical'
         }
-        return severity_map.get(category, '🟢 Low')
+        return severity_map.get(category, 'Low')
 
     def _get_description(self, category, pattern_name):
         """Get description for a suspicious pattern"""
@@ -379,14 +379,14 @@ class RegexAnalyzer:
 
         # Threat Summary
         html += '<div class="threat-summary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;">\n'
-        html += f'<h3 style="margin-top: 0;">🔍 Threat Analysis Summary</h3>\n'
+        html += f'<h3 style="margin-top: 0;">Threat Analysis Summary</h3>\n'
         html += f'<p style="font-size: 18px;"><strong>Threat Level:</strong> {analysis_results["threat_level"]}</p>\n'
         html += f'<p style="font-size: 16px;"><strong>Threat Score:</strong> {analysis_results["threat_score"]}/100</p>\n'
         html += '</div>\n\n'
 
         # IOCs Table with expandable sections
         if analysis_results['iocs']:
-            html += '<h3>📊 Indicators of Compromise (IOCs)</h3>\n'
+            html += '<h3>Indicators of Compromise (IOCs)</h3>\n'
             html += '<table class="forensic-table">\n'
             html += '<thead><tr><th>Type</th><th>Count</th><th>Examples</th><th>Action</th></tr></thead>\n'
             html += '<tbody>\n'
@@ -410,7 +410,7 @@ class RegexAnalyzer:
                     html += f'<td style="word-break: break-all; font-family: monospace; font-size: 12px;">'
                     html += f'{examples_preview} <em>(+{total_matches - 5} more)</em>'
                     html += f'</td>'
-                    html += f'<td><button onclick="toggleIOCList(\'ioc_{ioc_id}\')" style="background: #3498db; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-size: 12px;">📋 Show All</button></td>'
+                    html += f'<td><button onclick="toggleIOCList(\'ioc_{ioc_id}\')" style="background: #3498db; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-size: 12px;">Show All</button></td>'
                 else:
                     html += f'<td style="word-break: break-all; font-family: monospace; font-size: 12px;">{examples_preview}</td>'
                     html += f'<td>-</td>'
@@ -423,17 +423,17 @@ class RegexAnalyzer:
                     html += f'<td colspan="4" style="background: #f8f9fa; padding: 15px;">'
                     html += f'<h4 style="margin-top: 0;">All {ioc_type.replace("_", " ").title()} ({total_matches} total)</h4>'
                     html += f'<pre style="white-space: pre-wrap; font-size: 11px; max-height: 400px; overflow-y: auto; background: white; padding: 10px; border-radius: 5px;">{all_matches}</pre>'
-                    html += f'<button onclick="toggleIOCList(\'ioc_{ioc_id}\')" style="background: #e74c3c; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-size: 12px; margin-top: 10px;">❌ Hide</button>'
+                    html += f'<button onclick="toggleIOCList(\'ioc_{ioc_id}\')" style="background: #e74c3c; color: white; border: none; padding: 5px 15px; border-radius: 5px; cursor: pointer; font-size: 12px; margin-top: 10px;">[ERROR] Hide</button>'
                     html += f'</td>'
                     html += f'</tr>\n'
 
             html += '</tbody></table>\n\n'
         else:
-            html += '<p style="color: #27ae60; font-weight: bold;">✅ No IOCs detected in this category</p>\n\n'
+            html += '<p style="color: #27ae60; font-weight: bold;">[+] No IOCs detected in this category</p>\n\n'
 
         # Suspicious Patterns Table
         if analysis_results['suspicious_patterns']:
-            html += '<h3>⚠️ Suspicious Patterns Detected</h3>\n'
+            html += '<h3>[!] Suspicious Patterns Detected</h3>\n'
             html += '<table class="forensic-table">\n'
             html += '<thead><tr><th>Category</th><th>Pattern Type</th><th>Severity</th><th>Count</th><th>Description</th></tr></thead>\n'
             html += '<tbody>\n'
@@ -459,32 +459,32 @@ class RegexAnalyzer:
 
             html += '</tbody></table>\n\n'
         else:
-            html += '<p style="color: #27ae60; font-weight: bold;">✅ No suspicious patterns detected</p>\n\n'
+            html += '<p style="color: #27ae60; font-weight: bold;">[+] No suspicious patterns detected</p>\n\n'
 
         # Recommendations
-        html += '<h3>💡 Recommendations</h3>\n'
+        html += '<h3>Recommendations</h3>\n'
         html += '<div style="background: #f8f9fa; padding: 15px; border-left: 4px solid #3498db; border-radius: 5px;">\n'
         html += '<ul style="margin: 0; padding-left: 20px;">\n'
 
         if analysis_results['threat_score'] >= 100:
-            html += '<li style="margin-bottom: 10px;">🔴 <strong>IMMEDIATE ACTION REQUIRED:</strong> Critical threats detected. Isolate system and conduct deep forensic analysis.</li>\n'
+            html += '<li style="margin-bottom: 10px;"><strong>IMMEDIATE ACTION REQUIRED:</strong> Critical threats detected. Isolate system and conduct deep forensic analysis.</li>\n'
             html += '<li style="margin-bottom: 10px;">Scan all detected IOCs against threat intelligence databases (VirusTotal, AlientVault OTX).</li>\n'
             html += '<li style="margin-bottom: 10px;">Review all credentials and API keys found - assume compromised and rotate immediately.</li>\n'
             html += '<li style="margin-bottom: 10px;">Capture memory dump for advanced malware analysis.</li>\n'
             html += '<li style="margin-bottom: 10px;">Document all findings and initiate incident response procedures.</li>\n'
         elif analysis_results['threat_score'] >= 50:
-            html += '<li style="margin-bottom: 10px;">🟠 <strong>HIGH PRIORITY:</strong> Multiple suspicious indicators found. Investigation recommended.</li>\n'
+            html += '<li style="margin-bottom: 10px;"><strong>HIGH PRIORITY:</strong> Multiple suspicious indicators found. Investigation recommended.</li>\n'
             html += '<li style="margin-bottom: 10px;">Review detected patterns for false positives.</li>\n'
             html += '<li style="margin-bottom: 10px;">Verify file integrity using hash comparison tools.</li>\n'
             html += '<li style="margin-bottom: 10px;">Check detected IPs and domains against threat intelligence feeds.</li>\n'
             html += '<li style="margin-bottom: 10px;">Monitor network traffic for suspicious connections.</li>\n'
         elif analysis_results['threat_score'] >= 20:
-            html += '<li style="margin-bottom: 10px;">🟡 <strong>MEDIUM PRIORITY:</strong> Some suspicious patterns detected. Further review recommended.</li>\n'
+            html += '<li style="margin-bottom: 10px;"><strong>MEDIUM PRIORITY:</strong> Some suspicious patterns detected. Further review recommended.</li>\n'
             html += '<li style="margin-bottom: 10px;">Monitor systems for unusual activity.</li>\n'
             html += '<li style="margin-bottom: 10px;">Verify detected patterns are legitimate.</li>\n'
             html += '<li style="margin-bottom: 10px;">Update antivirus signatures and scan affected systems.</li>\n'
         else:
-            html += '<li style="margin-bottom: 10px;">🟢 <strong>LOW RISK:</strong> Minimal or no suspicious indicators detected.</li>\n'
+            html += '<li style="margin-bottom: 10px;"><strong>LOW RISK:</strong> Minimal or no suspicious indicators detected.</li>\n'
             html += '<li style="margin-bottom: 10px;">Continue normal security monitoring procedures.</li>\n'
             html += '<li style="margin-bottom: 10px;">Maintain regular backups and system updates.</li>\n'
 
@@ -513,7 +513,7 @@ class RegexAnalyzer:
             matches = re.findall(custom_pattern, text, re.IGNORECASE | re.MULTILINE)
             return list(dict.fromkeys(matches))  # Remove duplicates
         except re.error as e:
-            return [f"❌ Invalid regex pattern: {str(e)}"]
+            return [f"[ERROR] Invalid regex pattern: {str(e)}"]
 
 
 def analyze_forensic_output(forensic_text):

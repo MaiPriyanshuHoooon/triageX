@@ -69,11 +69,11 @@ class RawDiskReader:
 
         if handle == -1 or handle == 0:
             error = ctypes.get_last_error()
-            print(f"    ❌ Cannot open volume device (Error {error})")
-            print(f"    💡 Make sure you're running as Administrator!")
+            print(f"    [ERROR] Cannot open volume device (Error {error})")
+            print(f"    Make sure you're running as Administrator!")
             return None
 
-        print(f"    ✅ Volume device opened successfully (handle: {handle})")
+        print(f"    [+] Volume device opened successfully (handle: {handle})")
         return handle
 
     def get_volume_info(self, handle):
@@ -108,10 +108,10 @@ class RawDiskReader:
 
         if result:
             self.sector_size = geometry.BytesPerSector
-            print(f"    📊 Sector size: {self.sector_size} bytes")
+            print(f"    Sector size: {self.sector_size} bytes")
             return True
         else:
-            print(f"    ⚠️  Could not get volume geometry, using defaults")
+            print(f"    [!] Could not get volume geometry, using defaults")
             return False
 
     def read_boot_sector(self, handle):
@@ -136,7 +136,7 @@ class RawDiskReader:
         )
 
         if not result or bytes_read.value != self.sector_size:
-            print(f"    ❌ Could not read boot sector")
+            print(f"    [ERROR] Could not read boot sector")
             return False
 
         # Parse NTFS boot sector
@@ -148,7 +148,7 @@ class RawDiskReader:
 
         self.cluster_size = bytes_per_sector * sectors_per_cluster
 
-        print(f"    ✅ NTFS cluster size: {self.cluster_size} bytes")
+        print(f"    [+] NTFS cluster size: {self.cluster_size} bytes")
         return True
 
     def find_pagefile_simple(self, handle, volume_size_bytes):
@@ -161,7 +161,7 @@ class RawDiskReader:
         - Contains signature: "PAGE" or repeating patterns
         - Large contiguous allocation
         """
-        print(f"    🔍 Scanning for pagefile.sys signature...")
+        print(f"    Scanning for pagefile.sys signature...")
 
         # Scan first 10 GB (pagefile usually near start of disk)
         max_scan_size = min(10 * 1024 * 1024 * 1024, volume_size_bytes)
@@ -191,7 +191,7 @@ class RawDiskReader:
             if result == 0xFFFFFFFF:
                 error = ctypes.get_last_error()
                 if error != 0:
-                    print(f"    ⚠️  Seek error at offset {offset}")
+                    print(f"    [!] Seek error at offset {offset}")
                     break
 
             # Read chunk
@@ -212,7 +212,7 @@ class RawDiskReader:
             # Pagefile often contains these patterns
             if self._looks_like_pagefile(data):
                 found_offset = offset
-                print(f"    ✅ Potential pagefile data found at offset: {offset} (0x{offset:X})")
+                print(f"    [+] Potential pagefile data found at offset: {offset} (0x{offset:X})")
                 return offset, chunk_size * 100  # Assume 100 MB pagefile minimum
 
             offset += chunk_size
@@ -223,8 +223,8 @@ class RawDiskReader:
                 print(f"    ... Scanned {progress_gb:.1f} GB")
 
         if found_offset is None:
-            print(f"    ⚠️  Could not locate pagefile signature")
-            print(f"    💡 Pagefile might be disabled or on different volume")
+            print(f"    [!] Could not locate pagefile signature")
+            print(f"    Pagefile might be disabled or on different volume")
 
         return found_offset, 0
 
@@ -267,7 +267,7 @@ class RawDiskReader:
         Returns:
             True if successful, False otherwise
         """
-        print(f"\n    🔧 RAW DISK ACCESS METHOD (Autopsy-style)")
+        print(f"\n    RAW DISK ACCESS METHOD (Autopsy-style)")
         print(f"    {'='*60}")
 
         # Step 1: Open volume
@@ -284,13 +284,13 @@ class RawDiskReader:
 
             # Step 4: Get volume size
             volume_size = self._get_volume_size(handle)
-            print(f"    📊 Volume size: {volume_size / (1024**3):.2f} GB")
+            print(f"    Volume size: {volume_size / (1024**3):.2f} GB")
 
             # Step 5: Find pagefile location (simplified method)
             pagefile_offset, pagefile_size = self.find_pagefile_simple(handle, volume_size)
 
             if pagefile_offset is None:
-                print(f"    ❌ Could not locate pagefile")
+                print(f"    [ERROR] Could not locate pagefile")
                 return False
 
             # Step 6: Read pagefile data
@@ -341,14 +341,14 @@ class RawDiskReader:
                     if int(progress) % 10 == 0:
                         print(f"    Progress: {int(progress)}% ({total_read // (1024*1024)} MB / {bytes_to_read // (1024*1024)} MB)")
 
-            print(f"    ✅ Pagefile extracted to: {output_path}")
-            print(f"    📊 Size: {total_read / (1024*1024):.2f} MB")
+            print(f"    [+] Pagefile extracted to: {output_path}")
+            print(f"    Size: {total_read / (1024*1024):.2f} MB")
             return True
 
         finally:
             # Step 7: Cleanup
             self.kernel32.CloseHandle(handle)
-            print(f"    🔒 Volume handle closed")
+            print(f"    Volume handle closed")
 
     def _get_volume_size(self, handle):
         """Get total volume size in bytes"""
@@ -410,12 +410,12 @@ def test_raw_disk_access():
     )
 
     if success:
-        print("\n✅ RAW DISK ACCESS WORKS!")
+        print("\n[+] RAW DISK ACCESS WORKS!")
         print("   Pagefile extracted to: pagefile_raw_test.sys")
         print("   You can now analyze this file with string extraction")
         return True
     else:
-        print("\n❌ RAW DISK ACCESS FAILED")
+        print("\n[ERROR] RAW DISK ACCESS FAILED")
         print("   Try the VSS method or manual copy instead")
         return False
 

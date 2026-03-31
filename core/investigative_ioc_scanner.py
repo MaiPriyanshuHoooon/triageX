@@ -63,7 +63,7 @@ class InvestigativeIOCScanner:
         """
 
         print(f"\n{'='*80}")
-        print(f"🔍 EVIDENCE SCAN - {self.case_id}")
+        print(f"EVIDENCE SCAN - {self.case_id}")
         print(f"{'='*80}")
         print(f"Evidence Location: {evidence_path}")
         print(f"Evidence Label: {evidence_label or 'Unlabeled'}")
@@ -71,7 +71,7 @@ class InvestigativeIOCScanner:
         print(f"{'='*80}\n")
 
         if not os.path.exists(evidence_path):
-            print(f"❌ ERROR: Evidence path not found: {evidence_path}")
+            print(f"[ERROR] ERROR: Evidence path not found: {evidence_path}")
             return {'error': 'Path not found'}
 
         # Collect files to scan
@@ -158,12 +158,12 @@ class InvestigativeIOCScanner:
 
                     self.evidence_findings.append(finding)
 
-                    print(f"🚨 {results['threat_level']} - {results['total_iocs']} IOCs")
+                    print(f"[!!] {results['threat_level']} - {results['total_iocs']} IOCs")
                 else:
-                    print("✅ Clean")
+                    print("[+] Clean")
 
             except Exception as e:
-                print(f"⚠️  Error: {str(e)[:30]}")
+                print(f"[!] Error: {str(e)[:30]}")
 
         # Update metadata
         self.scan_metadata['total_files_scanned'] += len(files_to_scan)
@@ -172,7 +172,7 @@ class InvestigativeIOCScanner:
 
         # Summary
         print(f"\n{'='*80}")
-        print(f"📊 SCAN SUMMARY")
+        print(f"SCAN SUMMARY")
         print(f"{'='*80}")
         print(f"Total Files Scanned: {len(files_to_scan)}")
         print(f"Files with IOCs: {files_with_iocs}")
@@ -199,9 +199,9 @@ class InvestigativeIOCScanner:
         for finding in self.evidence_findings:
             if finding['file_path'] == file_path:
                 finding['investigator_notes'] = note
-                print(f"✅ Note added to: {os.path.basename(file_path)}")
+                print(f"[+] Note added to: {os.path.basename(file_path)}")
                 return
-        print(f"⚠️  File not found in findings: {file_path}")
+        print(f"[!] File not found in findings: {file_path}")
 
     def filter_by_severity(self, severity: List[str]) -> List[Dict]:
         """
@@ -233,7 +233,7 @@ class InvestigativeIOCScanner:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
         print(f"\n{'='*80}")
-        print(f"📄 GENERATING COURT REPORTS - {self.case_id}")
+        print(f"GENERATING COURT REPORTS - {self.case_id}")
         print(f"{'='*80}\n")
 
         # JSON Report (complete data)
@@ -245,7 +245,7 @@ class InvestigativeIOCScanner:
             }
             with open(json_file, 'w') as f:
                 json.dump(report_data, f, indent=2)
-            print(f"✅ JSON Report: {json_file}")
+            print(f"[+] JSON Report: {json_file}")
 
         # CSV Report (for spreadsheet analysis)
         if format in ['csv', 'all']:
@@ -277,7 +277,7 @@ class InvestigativeIOCScanner:
                         ', '.join(finding['findings_by_category'].keys()),
                         finding['investigator_notes']
                     ])
-            print(f"✅ CSV Report: {csv_file}")
+            print(f"[+] CSV Report: {csv_file}")
 
         # Text Report (human-readable for court documents)
         if format in ['txt', 'all']:
@@ -327,10 +327,10 @@ class InvestigativeIOCScanner:
 
                     f.write(f"\n{'='*80}\n\n")
 
-            print(f"✅ Text Report: {txt_file}")
+            print(f"[+] Text Report: {txt_file}")
 
         print(f"\n{'='*80}")
-        print(f"✅ Reports exported to: {output_dir}")
+        print(f"[+] Reports exported to: {output_dir}")
         print(f"{'='*80}\n")
 
     def generate_timeline(self) -> List[Dict]:

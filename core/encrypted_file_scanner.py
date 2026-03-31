@@ -331,7 +331,7 @@ class EncryptedFileScanner:
                     break
 
         except Exception as e:
-            print(f"    ⚠️  Error scanning {directory}: {str(e)}")
+            print(f"    [!] Error scanning {directory}: {str(e)}")
 
         return found_files
 

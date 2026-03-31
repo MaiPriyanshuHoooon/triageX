@@ -133,37 +133,37 @@ class PagefileAnalyzer:
         print("\n[+] Starting Pagefile.sys Analysis...")
 
         if not self.is_windows:
-            print("    ⚠️  Pagefile analysis requires Windows OS")
+            print("    [!] Pagefile analysis requires Windows OS")
             return self._get_unavailable_data()
 
         # Check for Administrator privileges
         if not self._is_admin():
-            print("    ⚠️  Administrator privileges required for pagefile access")
+            print("    [!] Administrator privileges required for pagefile access")
             return self._get_unavailable_data()
 
         try:
             # Step 1: Detect pagefile locations
-            print("    🔍 Detecting pagefile locations...")
+            print("    Detecting pagefile locations...")
             self._detect_pagefiles()
 
             if not self.pagefile_paths:
-                print("    ⚠️  No pagefiles found")
+                print("    [!] No pagefiles found")
                 return self._get_unavailable_data()
 
             # Step 2: Analyze each pagefile
             for pagefile_path in self.pagefile_paths:
-                print(f"\n    📄 Analyzing: {pagefile_path}")
+                print(f"\n    Analyzing: {pagefile_path}")
                 self._analyze_pagefile(pagefile_path)
 
             # Step 3: Categorize artifacts
-            print("    📊 Categorizing artifacts...")
+            print("    Categorizing artifacts...")
             self._categorize_artifacts()
 
             # Step 4: Detect sensitive data
-            print("    🔐 Detecting sensitive data...")
+            print("    Detecting sensitive data...")
             self._detect_sensitive_data()
 
-            print(f"\n    ✅ Pagefile Analysis Complete!")
+            print(f"\n    [+] Pagefile Analysis Complete!")
             print(f"       - Strings extracted: {self.stats['strings_extracted']:,}")
             print(f"       - URLs found: {self.stats['urls_found']:,}")
             print(f"       - Emails found: {self.stats['emails_found']:,}")
@@ -171,7 +171,7 @@ class PagefileAnalyzer:
             print(f"       - Sensitive items: {self.stats['sensitive_items']:,}")
 
         except Exception as e:
-            print(f"    ❌ Pagefile analysis error: {str(e)}")
+            print(f"    [ERROR] Pagefile analysis error: {str(e)}")
             return self._get_unavailable_data()
 
         return self._get_results()
@@ -220,7 +220,7 @@ class PagefileAnalyzer:
                         possible_locations.append(path)
 
         except Exception as e:
-            print(f"       ⚠️  Could not read pagefile registry: {e}")
+            print(f"       [!] Could not read pagefile registry: {e}")
 
         # Check which pagefiles actually exist
         for path in possible_locations:
@@ -229,9 +229,9 @@ class PagefileAnalyzer:
                     size = os.path.getsize(path)
                     self.pagefile_paths.append(path)
                     self.stats['pagefile_size'] += size
-                    print(f"       ✅ Found: {path} ({self._format_size(size)})")
+                    print(f"       [+] Found: {path} ({self._format_size(size)})")
                 except Exception as e:
-                    print(f"       ⚠️  Cannot access {path}: {e}")
+                    print(f"       [!] Cannot access {path}: {e}")
 
     def _analyze_pagefile(self, pagefile_path: str):
         """
@@ -249,11 +249,11 @@ class PagefileAnalyzer:
             try:
                 self._read_pagefile_direct(pagefile_path)
             except PermissionError:
-                print(f"       ⚠️  Pagefile is locked, attempting VSS copy...")
+                print(f"       [!] Pagefile is locked, attempting VSS copy...")
                 self._read_pagefile_vss(pagefile_path)
 
         except Exception as e:
-            print(f"       ❌ Error analyzing {pagefile_path}: {str(e)}")
+            print(f"       [ERROR] Error analyzing {pagefile_path}: {str(e)}")
 
     def _read_pagefile_direct(self, pagefile_path: str):
         """
@@ -288,7 +288,7 @@ class PagefileAnalyzer:
         Read pagefile using Volume Shadow Copy Service
         This allows accessing locked files
         """
-        print(f"       🔄 Creating VSS shadow copy...")
+        print(f"       Creating VSS shadow copy...")
 
         try:
             import subprocess
@@ -307,7 +307,7 @@ class PagefileAnalyzer:
             )
 
             if result.returncode != 0:
-                print(f"       ❌ VSS creation failed: {result.stderr}")
+                print(f"       [ERROR] VSS creation failed: {result.stderr}")
                 return
 
             # Parse shadow copy path from output
@@ -319,14 +319,14 @@ class PagefileAnalyzer:
 
             if shadow_path:
                 shadow_pagefile = shadow_path + pagefile_path[2:]  # Replace C: with shadow path
-                print(f"       ✅ Accessing shadow copy: {shadow_pagefile}")
+                print(f"       [+] Accessing shadow copy: {shadow_pagefile}")
                 self._read_pagefile_direct(shadow_pagefile)
             else:
-                print(f"       ❌ Could not determine shadow copy path")
+                print(f"       [ERROR] Could not determine shadow copy path")
 
         except Exception as e:
-            print(f"       ❌ VSS error: {str(e)}")
-            print(f"       💡 TIP: Copy pagefile manually: copy C:\\pagefile.sys D:\\pagefile_copy.sys")
+            print(f"       [ERROR] VSS error: {str(e)}")
+            print(f"       TIP: Copy pagefile manually: copy C:\\pagefile.sys D:\\pagefile_copy.sys")
 
     def _extract_strings_from_chunk(self, chunk: bytes, base_offset: int):
         """

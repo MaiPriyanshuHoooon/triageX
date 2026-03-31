@@ -279,20 +279,20 @@ def generate_threat_dashboard(threat_data):
     # Determine color scheme based on threat level
     if "Critical" in threat_data.get('threat_level', ''):
         gradient = "linear-gradient(135deg, #c0392b 0%, #8e44ad 100%)"
-        icon = "🔴"
+        icon = ""
     elif "High" in threat_data.get('threat_level', ''):
         gradient = "linear-gradient(135deg, #e67e22 0%, #d35400 100%)"
-        icon = "🟠"
+        icon = ""
     elif "Medium" in threat_data.get('threat_level', ''):
         gradient = "linear-gradient(135deg, #f39c12 0%, #f1c40f 100%)"
-        icon = "🟡"
+        icon = ""
     else:
         gradient = "linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)"
-        icon = "🟢"
+        icon = ""
 
     html = f'''
     <div class="threat-dashboard" style="background: {gradient}; color: white; padding: 25px; border-radius: 15px; margin: 20px 0; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <h2 style="margin-top: 0; font-size: 28px;">{icon} Threat Analysis Dashboard</h2>
+        <h2 style="margin-top: 0; font-size: 28px;">Threat Analysis Dashboard</h2>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px;">
             <div class="threat-stat" style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; text-align: center;">
@@ -327,7 +327,7 @@ def generate_threat_dashboard(threat_data):
         </div>
 
         <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 10px;">
-            <h3 style="margin-top: 0; font-size: 18px;">📌 Quick Summary</h3>
+            <h3 style="margin-top: 0; font-size: 18px;">Quick Summary</h3>
             <ul style="margin: 10px 0; padding-left: 20px; line-height: 1.8;">
                 <li>This report contains analysis from <strong>{threat_data.get('total_commands', 0)}</strong> forensic commands</li>
                 <li>Regex pattern matching identified <strong>{threat_data.get('total_iocs', 0)}</strong> indicators of compromise</li>
@@ -654,19 +654,19 @@ def generate_os_commands_tab(os_results, os_type="Windows", linux_results=None, 
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/>
                     </svg>
-                    Windows{' ✓' if win_active else ''}
+                    Windows{'  ✓' if win_active else ''}
                 </button>
                 <button class="os-btn {'active' if linux_active else ''}" data-os="linux" onclick="selectOS('linux')">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
                     </svg>
-                    Linux{' ✓' if linux_active else ''}
+                    Linux{'  ✓' if linux_active else ''}
                 </button>
                 <button class="os-btn {'active' if macos_active else ''}" data-os="macos" onclick="selectOS('macos')">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                     </svg>
-                    macOS{' ✓' if macos_active else ''}
+                    macOS{'  ✓' if macos_active else ''}
                 </button>
             </div>
         </div>
@@ -786,7 +786,7 @@ def generate_hash_tab_interactive(file_hashes):
     <div id="tab-hash" class="tab-content">
         <div class="analysis-header">
             <div class="header-left">
-                <h1>🔐 File Hash Analysis</h1>
+                <h1>File Hash Analysis</h1>
                 <p>Interactive directory browser - Click folders/files to view hash details</p>
             </div>
         </div>
@@ -816,7 +816,7 @@ def generate_hash_tab_interactive(file_hashes):
             <!-- Left: Directory Tree -->
             <div class="directory-tree-panel">
                 <div class="panel-header">
-                    <h3>📁 Directory Structure</h3>
+                    <h3>Directory Structure</h3>
                     <div class="panel-actions">
                         <button class="btn-secondary btn-sm" onclick="selectAllFiles()">Select All</button>
                         <span class="item-count">{len(dir_structure)} directories</span>
@@ -829,7 +829,7 @@ def generate_hash_tab_interactive(file_hashes):
                         type="text"
                         id="hashFileSearch"
                         class="hash-search-input"
-                        placeholder="🔍 Search files by name, path, or hash..."
+                        placeholder="Search files by name, path, or hash..."
                         onkeyup="filterHashFiles()"
                     />
                     <button class="hash-search-clear" onclick="clearHashSearch()" title="Clear search">×</button>
@@ -868,7 +868,7 @@ def generate_hash_tab_interactive(file_hashes):
             file_id = f"{dir_id}_file_{file_idx}"
             filename = file_data.get('file', '').split('/')[-1].split('\\')[-1]
             file_status = file_data.get('status', 'normal').lower()
-            status_icon = '🦠' if file_status == 'malware' else ('⚠️' if file_status == 'suspicious' else '✅')
+            status_icon = '[!]' if file_status == 'malware' else ('[?]' if file_status == 'suspicious' else '[OK]')
 
             # Create JSON data for the file
             import json
@@ -898,7 +898,7 @@ def generate_hash_tab_interactive(file_hashes):
             <!-- Right: Hash Details Panel -->
             <div class="hash-details-panel">
                 <div class="panel-header">
-                    <h3>🔍 Hash Details</h3>
+                    <h3>Hash Details</h3>
                     <div class="panel-actions">
                         <button class="btn-primary btn-sm" onclick="showSelectedHashDetails()">Show Details</button>
                         <button class="btn-secondary btn-sm" onclick="clearHashSelection()">Clear Selection</button>
@@ -948,13 +948,13 @@ def generate_ioc_scanner_tab(ioc_results=None):
     low_count = severity_counts.get('LOW', 0)
 
     # Determine threat color
-    if '🔴' in threat_level or 'CRITICAL' in threat_level:
+    if 'CRITICAL' in threat_level:
         threat_color = '#ef4444'
         threat_bg = 'rgba(239, 68, 68, 0.1)'
-    elif '🟠' in threat_level or 'HIGH' in threat_level:
+    elif 'HIGH' in threat_level:
         threat_color = '#f97316'
         threat_bg = 'rgba(249, 115, 22, 0.1)'
-    elif '🟡' in threat_level or 'MEDIUM' in threat_level:
+    elif 'MEDIUM' in threat_level:
         threat_color = '#f59e0b'
         threat_bg = 'rgba(245, 158, 11, 0.1)'
     else:
@@ -965,7 +965,7 @@ def generate_ioc_scanner_tab(ioc_results=None):
     <div id="tab-ioc" class="tab-content">
         <div class="analysis-header">
             <div class="header-left">
-                <h1>⚠️ IOC Scanner</h1>
+                <h1>IOC Scanner</h1>
                 <p>Indicators of Compromise Detection & Analysis</p>
             </div>
         </div>
@@ -973,7 +973,9 @@ def generate_ioc_scanner_tab(ioc_results=None):
         <!-- Investigative Banner (Always Show) -->
         <div class="investigative-banner">
             <div class="banner-content">
-                <div class="banner-icon">🔍</div>
+                <div class="banner-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>
+                </div>
                 <div class="banner-text">
                     <h3>Law Enforcement Investigative Scanner</h3>
                     <p>Scan specific evidence sources with full investigator control and court-ready reporting</p>
@@ -984,7 +986,7 @@ def generate_ioc_scanner_tab(ioc_results=None):
         <!-- Investigation Control Panel (Always Show) -->
         <div class="investigation-panel">
             <div class="panel-section">
-                <h3>📋 Case Management</h3>
+                <h3>Case Management</h3>
                 <div class="case-info-grid">
                     <div class="info-card">
                         <label>Case ID</label>
@@ -1002,7 +1004,7 @@ def generate_ioc_scanner_tab(ioc_results=None):
             </div>
 
             <div class="panel-section">
-                <h3>🎯 Evidence Selection</h3>
+                <h3>Evidence Selection</h3>
                 <div class="evidence-selection">
                     <div class="input-group">
                         <input type="text" id="evidencePath" placeholder="Enter evidence path (e.g., /Volumes/Evidence_USB)" class="form-input" />
@@ -1023,7 +1025,7 @@ def generate_ioc_scanner_tab(ioc_results=None):
             </div>
 
             <div class="panel-section">
-                <h3>⚙️ Scan Configuration</h3>
+                <h3>Scan Configuration</h3>
                 <div class="scan-config-grid">
                     <div class="config-group">
                         <label class="checkbox-label">
@@ -1054,7 +1056,7 @@ def generate_ioc_scanner_tab(ioc_results=None):
             </div>
 
             <div class="panel-section">
-                <h3>🚀 Actions</h3>
+                <h3>Actions</h3>
                 <div class="action-buttons">
                     <button class="btn-primary" onclick="startInvestigativeScan()">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1091,11 +1093,13 @@ def generate_ioc_scanner_tab(ioc_results=None):
         <!-- Results from Investigative Scans -->
         <div id="investigativeResults" class="scan-results-section" style="margin-bottom: 24px;">
             <div class="section-header">
-                <h3>📊 Investigation Results</h3>
+                <h3>Investigation Results</h3>
             </div>
             <div class="investigative-results">
                 <div class="info-banner">
-                    <div class="banner-icon">💡</div>
+                    <div class="banner-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    </div>
                     <div class="banner-text">
                         <h4>How to Use the Investigative Scanner:</h4>
                         <ol>
@@ -1108,7 +1112,7 @@ def generate_ioc_scanner_tab(ioc_results=None):
                             <li><strong>Export:</strong> Generate court-ready reports (JSON/CSV/TXT)</li>
                         </ol>
                         <div class="cli-alternative">
-                            <strong>💻 Prefer Command Line?</strong> Run: <code>python investigative_ioc_tool.py</code>
+                            <strong>Prefer Command Line?</strong> Run: <code>python investigative_ioc_tool.py</code>
                         </div>
                     </div>
                 </div>
@@ -1128,7 +1132,7 @@ def generate_ioc_scanner_tab(ioc_results=None):
         # Show automatic scan results below
         html += '''
         <div class="auto-scan-divider" style="margin: 32px 0; padding: 16px; background: rgba(59, 130, 246, 0.05); border-left: 4px solid #3b82f6; border-radius: 8px;">
-            <h3 style="color: #60a5fa; margin-bottom: 8px;">📋 Automatic System Scan Results</h3>
+            <h3 style="color: #60a5fa; margin-bottom: 8px;">Automatic System Scan Results</h3>
             <p style="color: #94a3b8; font-size: 14px;">The following IOCs were detected during the automatic full-system scan. For targeted evidence analysis with case tracking, use the Investigative Scanner above.</p>
         </div>
 '''
@@ -1140,7 +1144,7 @@ def generate_ioc_scanner_tab(ioc_results=None):
             <div class="threat-summary-grid">
                 <div class="threat-card" style="border-left: 4px solid {threat_color};">
                     <div class="threat-card-header">
-                        <h3>🎯 Threat Assessment</h3>
+                        <h3>Threat Assessment</h3>
                     </div>
                     <div class="threat-level" style="color: {threat_color}; background: {threat_bg};">
                         {threat_level}
@@ -1152,7 +1156,7 @@ def generate_ioc_scanner_tab(ioc_results=None):
 
                 <div class="threat-card">
                     <div class="threat-card-header">
-                        <h3>📊 IOCs Detected</h3>
+                        <h3>IOCs Detected</h3>
                     </div>
                     <div class="ioc-count">
                         <span class="ioc-count-number">{total_iocs}</span>
@@ -1162,7 +1166,7 @@ def generate_ioc_scanner_tab(ioc_results=None):
 
                 <div class="threat-card">
                     <div class="threat-card-header">
-                        <h3>🔴 Severity Breakdown</h3>
+                        <h3>Severity Breakdown</h3>
                     </div>
                     <div class="severity-stats">
                         <div class="severity-stat critical">
@@ -1194,7 +1198,7 @@ def generate_ioc_scanner_tab(ioc_results=None):
             <!-- IOC Findings by Category -->
             <div class="ioc-findings-section">
                 <div class="section-header">
-                    <h2>🔍 Detailed Findings</h2>
+                    <h2>Detailed Findings</h2>
                     <button class="btn-secondary" onclick="exportIOCResults()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -1210,22 +1214,22 @@ def generate_ioc_scanner_tab(ioc_results=None):
                 if findings:
                     # Category icon mapping
                     category_icons = {
-                        'Network IOC': '🌐',
-                        'Malware': '🦠',
-                        'File IOC': '📁',
-                        'Persistence': '🔒',
-                        'PowerShell': '⚡',
-                        'Obfuscation': '🎭',
-                        'Credentials': '🔑',
-                        'Cryptocurrency': '💰',
-                        'Attack Pattern': '⚔️'
+                        'Network IOC': '',
+                        'Malware': '',
+                        'File IOC': '',
+                        'Persistence': '',
+                        'PowerShell': '',
+                        'Obfuscation': '',
+                        'Credentials': '',
+                        'Cryptocurrency': '',
+                        'Attack Pattern': ''
                     }
-                    icon = category_icons.get(category, '⚠️')
+                    icon = category_icons.get(category, '')
 
                     html += f'''
                 <div class="ioc-category-section">
                     <div class="category-header">
-                        <h3>{icon} {category}</h3>
+                        <h3>{category}</h3>
                         <span class="category-count">{len(findings)} findings</span>
                     </div>
                     <div class="ioc-findings-table">
@@ -1250,20 +1254,20 @@ def generate_ioc_scanner_tab(ioc_results=None):
                         # Severity badge color
                         if severity == 'CRITICAL':
                             severity_class = 'severity-critical'
-                            severity_icon = '🔴'
+                            severity_icon = ''
                         elif severity == 'HIGH':
                             severity_class = 'severity-high'
-                            severity_icon = '🟠'
+                            severity_icon = ''
                         elif severity == 'MEDIUM':
                             severity_class = 'severity-medium'
-                            severity_icon = '🟡'
+                            severity_icon = ''
                         else:
                             severity_class = 'severity-low'
-                            severity_icon = '🟢'
+                            severity_icon = ''
 
                         html += f'''
                                 <tr>
-                                    <td><span class="severity-badge {severity_class}">{severity_icon} {severity}</span></td>
+                                    <td><span class="severity-badge {severity_class}">{severity}</span></td>
                                     <td><code class="pattern-name">{escape_html(pattern_name)}</code></td>
                                     <td><code class="match-text">{escape_html(match_text)}</code></td>
                                     <td class="description-text">{escape_html(description)}</td>
@@ -1323,7 +1327,7 @@ def generate_pii_tab(pii_results):
 
         <!-- PII Summary Dashboard -->
         <div class="card">
-            <h3>🔍 PII Detection Summary</h3>
+            <h3>PII Detection Summary</h3>
             <div class="stats-grid">
                 <div class="stat-item">
                     <div class="stat-number">{total_files}</div>
@@ -1368,7 +1372,7 @@ def generate_pii_tab(pii_results):
         '''
     else:
         # Generate PII findings
-        html += '<div class="card"><h3>📄 PII Detection Results</h3>'
+        html += '<div class="card"><h3>PII Detection Results</h3>'
 
         for i, result in enumerate(pii_results, 1):
             file_name = result.get('file_name', 'Unknown')
@@ -1393,7 +1397,7 @@ def generate_pii_tab(pii_results):
                 <div class="pii-file-header">
                     <div class="pii-file-info">
                         <div class="file-name-container">
-                            <h4>📄 {file_name}</h4>
+                            <h4>{file_name}</h4>
                             <div class="file-actions">
                                 <button class="action-btn copy-path-btn" onclick="copyToClipboard('{file_path}')" title="Copy file path">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1413,13 +1417,13 @@ def generate_pii_tab(pii_results):
                             </div>
                         </div>
                         <div class="file-path-container">
-                            <span class="file-path-label">📍 Location:</span>
+                            <span class="file-path-label">Location:</span>
                             <code class="file-path">{file_path}</code>
                         </div>
                         <div class="file-metadata">
-                            <span class="metadata-item">📁 Type: {file_type}</span>
-                            <span class="metadata-item">📏 Size: {size_formatted}</span>
-                            <span class="metadata-item">🕒 Modified: {file_modified}</span>
+                            <span class="metadata-item">Type: {file_type}</span>
+                            <span class="metadata-item">Size: {size_formatted}</span>
+                            <span class="metadata-item">Modified: {file_modified}</span>
                         </div>
                         <div class="pii-scores">
                             <span class="score-badge privacy-{risk_class}">Privacy Risk: {privacy_score}/15</span>
@@ -1430,7 +1434,7 @@ def generate_pii_tab(pii_results):
                 </div>
                 <div class="file-details-expanded" id="details-{i}" style="display: none;">
                     <div class="details-section">
-                        <h5>🔍 Technical Analysis</h5>
+                        <h5>Technical Analysis</h5>
                         <div class="tech-details">
                             <p><strong>Full Path:</strong> <code>{file_path}</code></p>
                             <p><strong>File Type:</strong> {file_type}</p>
@@ -1442,9 +1446,9 @@ def generate_pii_tab(pii_results):
                     </div>
                 </div>
                 <div class="pii-findings">
-                    <h5>🆔 PII Evidence Found ({len(pii_findings)} items)</h5>
+                    <h5>PII Evidence Found ({len(pii_findings)} items)</h5>
                     <div class="pii-evidence-notice">
-                        <p>⚖️ <strong>Law Enforcement Notice:</strong> Full unmasked data displayed for investigative purposes</p>
+                        <p><strong>Law Enforcement Notice:</strong> Full unmasked data displayed for investigative purposes</p>
                     </div>
             '''
 
@@ -1459,7 +1463,7 @@ def generate_pii_tab(pii_results):
             for category, findings in categories.items():
                 html += f'''
                 <div class="pii-category">
-                    <h6>📂 {category} ({len(findings)} items)</h6>
+                    <h6>{category} ({len(findings)} items)</h6>
                     <div class="pii-items-table">
                         <table class="evidence-table">
                             <thead>
@@ -1501,7 +1505,7 @@ def generate_pii_tab(pii_results):
                                     </td>
                                     <td>
                                         <button class="mini-action-btn" onclick="copyToClipboard('{display_value}')" title="Copy evidence value">
-                                            📋
+                                            Copy
                                         </button>
                                     </td>
                                 </tr>
@@ -1553,35 +1557,43 @@ def generate_encrypted_files_tab(encrypted_data):
 
     html = f'''    <div id="tab-encrypted" class="tab-content">
         <div class="tab-header">
-            <h1>🔐 Encrypted Files Detection</h1>
+            <h1>Encrypted Files Detection</h1>
             <p>Scanning user directories for encrypted files (excluding system files)</p>
         </div>
 
         <!-- Stats Cards -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon">📊</div>
+                <div class="stat-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                </div>
                 <div class="stat-content">
                     <div class="stat-value">{stats.get('total_scanned', 0):,}</div>
                     <div class="stat-label">Files Scanned</div>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">🔒</div>
+                <div class="stat-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                </div>
                 <div class="stat-content">
                     <div class="stat-value">{stats.get('encrypted_found', 0):,}</div>
                     <div class="stat-label">Encrypted Files Found</div>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">⚠️</div>
+                <div class="stat-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </div>
                 <div class="stat-content">
                     <div class="stat-value" style="color: {risk_color}">{risk_level}</div>
                     <div class="stat-label">Risk Level ({risk_score}/100)</div>
                 </div>
             </div>
             <div class="stat-card">
-                <div class="stat-icon">💻</div>
+                <div class="stat-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                </div>
                 <div class="stat-content">
                     <div class="stat-value">{platform.upper()}</div>
                     <div class="stat-label">Platform</div>
@@ -1597,11 +1609,11 @@ def generate_encrypted_files_tab(encrypted_data):
 
     # Add breakdown items
     breakdown_items = [
-        ('Windows EFS Files', stats.get('efs_files', 0), '🔐'),
-        ('Password-Protected', stats.get('password_protected', 0), '🔑'),
-        ('Encrypted Archives', stats.get('encrypted_archives', 0), '📦'),
-        ('Encrypted Containers', stats.get('encrypted_containers', 0), '💾'),
-        ('FileVault/DMG (macOS)', stats.get('filevault_files', 0), '🍎')
+        ('Windows EFS Files', stats.get('efs_files', 0), ''),
+        ('Password-Protected', stats.get('password_protected', 0), ''),
+        ('Encrypted Archives', stats.get('encrypted_archives', 0), ''),
+        ('Encrypted Containers', stats.get('encrypted_containers', 0), ''),
+        ('FileVault/DMG (macOS)', stats.get('filevault_files', 0), '')
     ]
 
     for label, count, icon in breakdown_items:
@@ -1625,13 +1637,13 @@ def generate_encrypted_files_tab(encrypted_data):
         html += f'''            <!-- Action Buttons -->
             <div class="action-buttons" style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
                 <button class="btn-primary" onclick="copyAllPaths()">
-                    📋 Copy All Paths ({len(files)})
+                    Copy All Paths ({len(files)})
                 </button>
                 <button class="btn-secondary" onclick="exportPathsToFile()">
-                    💾 Export Paths to File
+                    Export Paths to File
                 </button>
                 <button class="btn-secondary" onclick="copyPathsWithDetails()">
-                    📊 Copy Paths with Details
+                    Copy Paths with Details
                 </button>
             </div>
 
@@ -1645,11 +1657,11 @@ def generate_encrypted_files_tab(encrypted_data):
                     <thead>
                         <tr>
                             <th style="width: 40px;">#</th>
-                            <th onclick="sortEncryptedTable(1)">📁 Filename ↕</th>
-                            <th onclick="sortEncryptedTable(2)">📍 Full Path ↕</th>
-                            <th onclick="sortEncryptedTable(3)">🔐 Encryption Type ↕</th>
-                            <th onclick="sortEncryptedTable(4)">📏 Size (MB) ↕</th>
-                            <th onclick="sortEncryptedTable(5)">📅 Modified ↕</th>
+                            <th onclick="sortEncryptedTable(1)">Filename</th>
+                            <th onclick="sortEncryptedTable(2)">Full Path</th>
+                            <th onclick="sortEncryptedTable(3)">Encryption Type</th>
+                            <th onclick="sortEncryptedTable(4)">Size (MB)</th>
+                            <th onclick="sortEncryptedTable(5)">Modified</th>
                             <th style="width: 80px;">Actions</th>
                         </tr>
                     </thead>
@@ -1667,7 +1679,7 @@ def generate_encrypted_files_tab(encrypted_data):
                                 <div class="path-container">
                                     <code class="file-path" id="path-{idx}">{file_info['path']}</code>
                                     <button class="copy-path-btn" onclick="copyPath('{escaped_path}', {idx})" title="Copy path to clipboard">
-                                        📋
+                                        Copy
                                     </button>
                                 </div>
                             </td>
@@ -1676,7 +1688,7 @@ def generate_encrypted_files_tab(encrypted_data):
                             <td>{file_info['modified']}</td>
                             <td>
                                 <button class="action-btn-small" onclick="showFileDetails({idx})" title="View details">
-                                    ℹ️
+                                    Info
                                 </button>
                             </td>
                         </tr>
@@ -1687,7 +1699,7 @@ def generate_encrypted_files_tab(encrypted_data):
             </div>
 '''
     else:
-        html += '''            <p class="empty-output">✅ No encrypted files detected in user directories</p>
+        html += '''            <p class="empty-output">No encrypted files detected in user directories</p>
 '''
 
     html += '''        </div>

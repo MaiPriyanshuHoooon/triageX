@@ -428,7 +428,7 @@ class NTFSParser:
             if utc_result.year < 1601 or utc_result.year > 2100:
                 return None
 
-            # ⚠️ CRITICAL FIX: Convert from UTC to LOCAL timezone
+            # [!] CRITICAL FIX: Convert from UTC to LOCAL timezone
             # Windows stores FILETIME in UTC, but users expect local time display
             import time
 

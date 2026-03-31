@@ -111,14 +111,14 @@ def _generate_linux_tab(data):
         <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3);
                      border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.5rem;
                      color: #fbbf24; font-size: 0.85rem;">
-            ⚠️ {w}
+            {w}
         </div>"""
     for e in errors:
         alerts_html += f"""
         <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);
                      border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.5rem;
                      color: #ef4444; font-size: 0.85rem;">
-            ❌ {e}
+            {e}
         </div>"""
 
     # --- Stats cards ---
@@ -153,7 +153,7 @@ def _generate_linux_tab(data):
     # --- Memory sources table ---
     sources_rows = ""
     for src in sources:
-        status_icon = "✅" if src.get("usable") else ("⚠️" if src.get("exists") else "❌")
+        status_icon = "[OK]" if src.get("usable") else ("[!]" if src.get("exists") else "[X]")
         status_text = "Usable" if src.get("usable") else ("Exists (no access)" if src.get("exists") else "Not available")
         size_text = src.get("size_human", "—")
         sources_rows += f"""
@@ -167,7 +167,7 @@ def _generate_linux_tab(data):
     sources_html = f"""
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h2>🔌 Memory Acquisition Sources (AVML-compatible)</h2>
+            <h2>Memory Acquisition Sources (AVML-compatible)</h2>
         </div>
         <div style="padding: 1rem;">
             <table class="data-table" style="width: 100%;">
@@ -177,7 +177,7 @@ def _generate_linux_tab(data):
                 <tbody>{sources_rows}</tbody>
             </table>
             <p style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
-                💡 For full physical RAM dump, use:
+                For full physical RAM dump, use:
                 <code style="color: var(--accent-green);">sudo ./avml --compress output.lime</code>
             </p>
         </div>
@@ -198,7 +198,7 @@ def _generate_linux_tab(data):
     iomem_html = f"""
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h2>🗺️ System RAM Ranges (/proc/iomem)</h2>
+            <h2>System RAM Ranges (/proc/iomem)</h2>
         </div>
         <div style="padding: 1rem;">
             <table class="data-table" style="width: 100%;">
@@ -217,7 +217,7 @@ def _generate_linux_tab(data):
         kernel_html = f"""
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h2>🐧 Kernel Memory Info</h2>
+            <h2>Kernel Memory Info</h2>
         </div>
         <div style="padding: 1rem;">
             <table class="data-table" style="width: 100%;">
@@ -244,7 +244,7 @@ def _generate_linux_tab(data):
     return f"""
             <div id="tab-memory" class="tab-content">
                 <div class="tab-header">
-                    <h1>🧠 Memory Analysis</h1>
+                    <h1>Memory Analysis</h1>
                     <span style="color: var(--text-muted); font-size: 0.9rem;">Linux • AVML-compatible Analysis</span>
                 </div>
                 {alerts_html}
@@ -279,14 +279,14 @@ def _generate_macos_tab(data):
         <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3);
                      border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.5rem;
                      color: #fbbf24; font-size: 0.85rem;">
-            ⚠️ {w}
+            {w}
         </div>"""
     for e in errors:
         alerts_html += f"""
         <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);
                      border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.5rem;
                      color: #ef4444; font-size: 0.85rem;">
-            ❌ {e}
+            {e}
         </div>"""
 
     total_ram = sys_mem.get("total_human", "N/A")
@@ -369,7 +369,7 @@ def _generate_macos_tab(data):
         swap_html = f"""
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h2>💾 Swap & Memory Compression</h2>
+            <h2>Swap & Memory Compression</h2>
         </div>
         <div style="padding: 1rem;">
             <table class="data-table" style="width: 100%;">
@@ -384,7 +384,7 @@ def _generate_macos_tab(data):
     return f"""
             <div id="tab-memory" class="tab-content">
                 <div class="tab-header">
-                    <h1>🧠 Memory Analysis</h1>
+                    <h1>Memory Analysis</h1>
                     <span style="color: var(--text-muted); font-size: 0.9rem;">macOS • System Memory Statistics</span>
                 </div>
                 {alerts_html}
@@ -418,14 +418,14 @@ def _generate_windows_tab(data):
         <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3);
                      border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.5rem;
                      color: #fbbf24; font-size: 0.85rem;">
-            ⚠️ {w}
+            {w}
         </div>"""
     for e in errors:
         alerts_html += f"""
         <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);
                      border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.5rem;
                      color: #ef4444; font-size: 0.85rem;">
-            ❌ {e}
+            {e}
         </div>"""
 
     total_ram = sys_mem.get("total_human", "N/A")
@@ -469,7 +469,7 @@ def _generate_windows_tab(data):
         dumps_html = f"""
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h2>💥 Crash Dump Files</h2>
+            <h2>Crash Dump Files</h2>
         </div>
         <div style="padding: 1rem;">
             <table class="data-table" style="width: 100%;">
@@ -479,14 +479,14 @@ def _generate_windows_tab(data):
                 <tbody>{dump_rows}</tbody>
             </table>
             <p style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
-                💡 Crash dumps can be analyzed with WinDbg or Volatility for memory forensics.
+                Crash dumps can be analyzed with WinDbg or Volatility for memory forensics.
             </p>
         </div>
     </div>"""
     else:
         dumps_html = """
     <div class="card" style="margin-top: 1.5rem;">
-        <div class="card-header"><h2>💥 Crash Dump Files</h2></div>
+        <div class="card-header"><h2>Crash Dump Files</h2></div>
         <div style="padding: 1.5rem; text-align: center; color: var(--text-muted);">
             No crash dump files found on this system.
         </div>
@@ -496,7 +496,7 @@ def _generate_windows_tab(data):
     artifacts_html = f"""
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h2>📁 Memory Artifacts</h2>
+            <h2>Memory Artifacts</h2>
         </div>
         <div style="padding: 1rem;">
             <table class="data-table" style="width: 100%;">
@@ -504,13 +504,13 @@ def _generate_windows_tab(data):
                 <tbody>
                     <tr>
                         <td>hiberfil.sys</td>
-                        <td>{"✅ Present" if hibernation.get("exists") else "❌ Not found"}</td>
+                        <td>{"Present" if hibernation.get("exists") else "Not found"}</td>
                         <td>{hibernation.get("size_human", "N/A")}</td>
                         <td style="font-size:0.8rem;">{hibernation.get("description", hibernation.get("note", ""))}</td>
                     </tr>
                     <tr>
                         <td>pagefile.sys</td>
-                        <td>{"✅ Present" if pagefile.get("exists") else "❌ Not found"}</td>
+                        <td>{"Present" if pagefile.get("exists") else "Not found"}</td>
                         <td>{pagefile.get("size_human", "N/A")}</td>
                         <td style="font-size:0.8rem;">Virtual memory paging file</td>
                     </tr>
@@ -525,7 +525,7 @@ def _generate_windows_tab(data):
         config_html = f"""
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h2>⚙️ Crash Dump Configuration</h2>
+            <h2>Crash Dump Configuration</h2>
         </div>
         <div style="padding: 1rem;">
             <table class="data-table" style="width: 100%;">
@@ -547,7 +547,7 @@ def _generate_windows_tab(data):
     return f"""
             <div id="tab-memory" class="tab-content">
                 <div class="tab-header">
-                    <h1>🧠 Memory Analysis</h1>
+                    <h1>Memory Analysis</h1>
                     <span style="color: var(--text-muted); font-size: 0.9rem;">Windows • Memory Artifacts & Process Analysis</span>
                 </div>
                 {alerts_html}
@@ -574,12 +574,12 @@ def _generate_dump_info_card(dump_info):
         return f"""
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h2>💾 Memory Sample Acquired</h2>
+            <h2>Memory Sample Acquired</h2>
         </div>
         <div style="padding: 1rem;">
             <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);
                         border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
-                <span style="color: #10b981; font-weight: 600;">✅ Memory sample successfully acquired</span>
+                <span style="color: #10b981; font-weight: 600;">Memory sample successfully acquired</span>
             </div>
             <table class="data-table" style="width: 100%;">
                 <tbody>
@@ -597,12 +597,12 @@ def _generate_dump_info_card(dump_info):
         return f"""
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h2>💾 Memory Dump Status</h2>
+            <h2>Memory Dump Status</h2>
         </div>
         <div style="padding: 1rem;">
             <div style="background: rgba(100, 116, 139, 0.15); border: 1px solid rgba(100, 116, 139, 0.3);
                         border-radius: 8px; padding: 1rem;">
-                <p style="color: var(--text-secondary); margin: 0;"><strong>ℹ️ {dump_info.get('reason', 'Skipped')}</strong></p>
+                <p style="color: var(--text-secondary); margin: 0;"><strong>{dump_info.get('reason', 'Skipped')}</strong></p>
                 <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.5rem 0 0 0;">
                     {dump_info.get('recommendation', '')}
                 </p>
@@ -613,12 +613,12 @@ def _generate_dump_info_card(dump_info):
         return f"""
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h2>💾 Memory Dump Status</h2>
+            <h2>Memory Dump Status</h2>
         </div>
         <div style="padding: 1rem;">
             <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);
                         border-radius: 8px; padding: 1rem;">
-                <p style="color: #ef4444; margin: 0;"><strong>❌ Memory acquisition failed</strong></p>
+                <p style="color: #ef4444; margin: 0;"><strong>Memory acquisition failed</strong></p>
                 <p style="color: var(--text-muted); font-size: 0.85rem; margin: 0.5rem 0 0 0;">
                     Reason: {dump_info.get('reason', 'Unknown')}<br>
                     {dump_info.get('recommendation', '')}
@@ -653,7 +653,7 @@ def _generate_process_memory_table(procs):
     return f"""
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h2>📊 Top Processes by Memory Usage</h2>
+            <h2>Top Processes by Memory Usage</h2>
         </div>
         <div style="padding: 1rem;">
             <table class="data-table" style="width: 100%;">
@@ -688,7 +688,7 @@ def _generate_process_memory_table_windows(procs):
     return f"""
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h2>📊 Top Processes by Memory Usage</h2>
+            <h2>Top Processes by Memory Usage</h2>
         </div>
         <div style="padding: 1rem;">
             <table class="data-table" style="width: 100%;">
@@ -701,7 +701,7 @@ def _generate_process_memory_table_windows(procs):
                 <tbody>{rows}</tbody>
             </table>
             <p style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
-                💡 For live memory acquisition, use: <code style="color: var(--accent-green);">winpmem_mini_x64.exe output.raw</code>
+                For live memory acquisition, use: <code style="color: var(--accent-green);">winpmem_mini_x64.exe output.raw</code>
             </p>
         </div>
     </div>"""

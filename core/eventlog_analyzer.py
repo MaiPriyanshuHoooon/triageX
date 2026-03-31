@@ -145,8 +145,8 @@ class EventLogAnalyzer:
             max_events_per_log: Maximum events to retrieve per log (default 5000)
         """
         if not self.is_windows:
-            print("    ⚠️  Not running on Windows - event log analysis not available")
-            print("    💡 Use Windows Event Viewer or dedicated tools for offline analysis")
+            print("    [!] Not running on Windows - event log analysis not available")
+            print("    Use Windows Event Viewer or dedicated tools for offline analysis")
             return self.events
 
         try:
@@ -154,7 +154,7 @@ class EventLogAnalyzer:
             import win32evtlogutil
             import win32con
 
-            print(f"[+] 📊 Analyzing Windows Event Logs (Last {days_back} days)...")
+            print(f"[+] Analyzing Windows Event Logs (Last {days_back} days)...")
 
             # Calculate cutoff time
             cutoff_time = datetime.now() - timedelta(days=days_back)
@@ -174,13 +174,13 @@ class EventLogAnalyzer:
             # Perform anomaly detection
             self._detect_anomalies()
 
-            print(f"    ✅ Event log analysis complete")
+            print(f"    [+] Event log analysis complete")
 
         except ImportError:
-            print("    ⚠️  win32evtlog module not available")
-            print("    💡 Install: pip install pywin32")
+            print("    [!] win32evtlog module not available")
+            print("    Install: pip install pywin32")
         except Exception as e:
-            print(f"    ⚠️  Event log analysis error: {str(e)}")
+            print(f"    [!] Event log analysis error: {str(e)}")
 
         return self.events
 
@@ -379,7 +379,7 @@ class EventLogAnalyzer:
 
     def _detect_anomalies(self):
         """Detect anomalies in collected events"""
-        print(f"    🔍 Detecting anomalies...")
+        print(f"    Detecting anomalies...")
 
         # Detect brute force attempts
         self._detect_brute_force()
@@ -616,4 +616,4 @@ if __name__ == "__main__":
         print(f"  Service Installations: {stats['service_installations']}")
         print(f"  Anomalies Detected: {stats['anomalies_detected']}")
     else:
-        print("\n⚠️  Not running on Windows - event log analysis requires Windows OS")
+        print("\n[!] Not running on Windows - event log analysis requires Windows OS")

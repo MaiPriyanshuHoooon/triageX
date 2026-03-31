@@ -631,17 +631,17 @@ def parse_hash_analysis_output(hash_results):
 
     # File Hashes Table
     if hash_results.get('file_hashes'):
-        html += '<h3>📁 File Hash Analysis</h3>\n'
+        html += '<h3>File Hash Analysis</h3>\n'
         html += '<table class="forensic-table">\n'
         html += '<thead><tr><th>File</th><th>MD5</th><th>SHA1</th><th>SHA256</th><th>Size (bytes)</th><th>Status</th></tr></thead>\n'
         html += '<tbody>\n'
 
         for file_hash in hash_results['file_hashes']:
-            status = "✅ OK"
+            status = "[+] OK"
             row_style = ""
 
             if file_hash.get('error'):
-                status = f"❌ {file_hash['error']}"
+                status = f"[ERROR] {file_hash['error']}"
                 row_style = ' style="background-color: #ffe6e6;"'
 
             html += f'<tr{row_style}>'
@@ -657,7 +657,7 @@ def parse_hash_analysis_output(hash_results):
 
     # Malware Detections Table
     if hash_results.get('malware_detections'):
-        html += '<h3>🔴 MALWARE DETECTED</h3>\n'
+        html += '<h3>MALWARE DETECTED</h3>\n'
         html += '<table class="forensic-table">\n'
         html += '<thead><tr><th>File</th><th>Threat Name</th><th>Hash (SHA256)</th><th>Severity</th></tr></thead>\n'
         html += '<tbody>\n'
@@ -667,14 +667,14 @@ def parse_hash_analysis_output(hash_results):
             html += f'<td><strong>{escape_html(detection.get("file", "N/A"))}</strong></td>'
             html += f'<td style="color: #c0392b;"><strong>{escape_html(detection.get("threat", "Unknown Threat"))}</strong></td>'
             html += f'<td style="font-family: monospace; font-size: 10px;">{escape_html(detection.get("hash", "N/A"))}</td>'
-            html += f'<td>{detection.get("severity", "🔴 CRITICAL")}</td>'
+            html += f'<td>{detection.get("severity", "CRITICAL")}</td>'
             html += '</tr>\n'
 
         html += '</tbody></table>\n\n'
 
     # Suspicious Files Table
     if hash_results.get('suspicious_files'):
-        html += '<h3>⚠️ Suspicious Files</h3>\n'
+        html += '<h3>[!] Suspicious Files</h3>\n'
         html += '<table class="forensic-table">\n'
         html += '<thead><tr><th>File</th><th>Reason</th><th>Extension</th><th>Hash (SHA256)</th></tr></thead>\n'
         html += '<tbody>\n'
@@ -691,7 +691,7 @@ def parse_hash_analysis_output(hash_results):
 
     # Duplicate Files Table
     if hash_results.get('duplicates'):
-        html += '<h3>🔄 Duplicate Files Detected</h3>\n'
+        html += '<h3>Duplicate Files Detected</h3>\n'
         html += '<table class="forensic-table">\n'
         html += '<thead><tr><th>Hash (SHA256)</th><th>Duplicate Files</th><th>Count</th></tr></thead>\n'
         html += '<tbody>\n'
@@ -710,7 +710,7 @@ def parse_hash_analysis_output(hash_results):
 
     # Summary
     html += '<div style="background: #f8f9fa; padding: 15px; border-left: 4px solid #3498db; border-radius: 5px; margin-top: 20px;">\n'
-    html += '<h4 style="margin-top: 0;">📊 Hash Analysis Summary</h4>\n'
+    html += '<h4 style="margin-top: 0;">Hash Analysis Summary</h4>\n'
     html += '<ul style="margin: 10px 0; padding-left: 20px;">\n'
     html += f'<li><strong>Total Files Hashed:</strong> {len(hash_results.get("file_hashes", []))}</li>\n'
     html += f'<li><strong>Malware Detected:</strong> <span style="color: #c0392b; font-weight: bold;">{len(hash_results.get("malware_detections", []))}</span></li>\n'

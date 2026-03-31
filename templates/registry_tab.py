@@ -30,7 +30,7 @@ def generate_registry_tab(registry_data, registry_stats):
     <div id="tab-registry" class="tab-content">
         <div class="analysis-header">
             <div class="header-left">
-                <h1>📋 Registry Analysis</h1>
+                <h1>Registry Analysis</h1>
                 <p>Windows Registry forensic artifact extraction and analysis</p>
             </div>
         </div>
@@ -42,7 +42,9 @@ def generate_registry_tab(registry_data, registry_stats):
         <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);
                     border-radius: 12px; padding: 24px; margin: 20px 0;">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <div style="font-size: 48px;">ℹ️</div>
+                <div style="color: #3b82f6;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </div>
                 <div>
                     <h3 style="margin: 0 0 8px 0; color: #3b82f6;">Registry Analysis Unavailable</h3>
                     <p style="margin: 0; color: #9ca3af; line-height: 1.6;">

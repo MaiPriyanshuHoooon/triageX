@@ -252,9 +252,9 @@ class FileScanner:
         for key, value in kwargs.items():
             if key in self.scan_config:
                 self.scan_config[key] = value
-                print(f"📝 Configuration updated: {key} = {value}")
+                print(f"Configuration updated: {key} = {value}")
             else:
-                print(f"⚠️  Unknown configuration: {key}")
+                print(f"[!] Unknown configuration: {key}")
 
     def scan_common_directories(self, max_files=50):
         """
@@ -282,18 +282,18 @@ class FileScanner:
         """
         all_results = []
 
-        print(f"🔍 Starting comprehensive file scan for PII...")
-        print(f"📁 Scanning {len(directories)} directories")
-        print(f"⚙️  Max file size: {self.scan_config['max_file_size_mb']}MB")
+        print(f"Starting comprehensive file scan for PII...")
+        print(f"Scanning {len(directories)} directories")
+        print(f" Max file size: {self.scan_config['max_file_size_mb']}MB")
         print(f"🖼️  OCR enabled: {self.scan_config['enable_ocr']}")
         print(f"🎬 Video analysis enabled: {self.scan_config['enable_video']}")
-        print(f"📄 PDF enabled: {self.scan_config['enable_pdf']}")
-        print(f"🎯 Min Privacy Score: {self.scan_config['min_privacy_score']}")
-        print(f"🎯 Min PII Count: {self.scan_config['min_pii_count']}")
-        print(f"🎯 Min Investigation Score: {self.scan_config['min_investigative_score']}")
+        print(f"PDF enabled: {self.scan_config['enable_pdf']}")
+        print(f"Min Privacy Score: {self.scan_config['min_privacy_score']}")
+        print(f"Min PII Count: {self.scan_config['min_pii_count']}")
+        print(f"Min Investigation Score: {self.scan_config['min_investigative_score']}")
         print()
 
-        print(f"🎯 Scanning {len(directories)} specific directories...")
+        print(f"Scanning {len(directories)} specific directories...")
 
         for dir_path in directories:
             if os.path.exists(dir_path) and os.path.isdir(dir_path):
@@ -301,7 +301,7 @@ class FileScanner:
                 results = self._scan_directory(dir_path, max_files_per_dir=max_files_per_dir)
                 all_results.extend(results)
             else:
-                print(f"  ⚠️  Directory not found: {dir_path}")
+                print(f"  [!] Directory not found: {dir_path}")
 
         self.scan_results = all_results
         return all_results
@@ -391,9 +391,9 @@ class FileScanner:
                     break
 
         except PermissionError:
-            print(f"    ⚠️  Permission denied: {directory}")
+            print(f"    [!] Permission denied: {directory}")
         except Exception as e:
-            print(f"    ❌ Error scanning {directory}: {str(e)}")
+            print(f"    [ERROR] Error scanning {directory}: {str(e)}")
 
         return results
 
@@ -473,7 +473,7 @@ class FileScanner:
                 }
 
         except Exception as e:
-            print(f"    ❌ Error scanning file {file_path}: {str(e)}")
+            print(f"    [ERROR] Error scanning file {file_path}: {str(e)}")
             return None
 
         return None
@@ -513,7 +513,7 @@ class FileScanner:
                 text_content = self._extract_data_file_text(file_path)
 
         except Exception as e:
-            print(f"    ⚠️  Error extracting text from {file_path}: {str(e)}")
+            print(f"    [!] Error extracting text from {file_path}: {str(e)}")
             return ""
 
         return text_content
@@ -527,7 +527,7 @@ class FileScanner:
                 for page in reader.pages:
                     text += page.extract_text() + "\n"
         except Exception as e:
-            print(f"    ⚠️  Error reading PDF {file_path}: {str(e)}")
+            print(f"    [!] Error reading PDF {file_path}: {str(e)}")
         return text
 
     def _extract_docx_text(self, file_path):
@@ -538,7 +538,7 @@ class FileScanner:
             for paragraph in doc.paragraphs:
                 text += paragraph.text + "\n"
         except Exception as e:
-            print(f"    ⚠️  Error reading DOCX {file_path}: {str(e)}")
+            print(f"    [!] Error reading DOCX {file_path}: {str(e)}")
         return text
 
     def _extract_image_text(self, file_path):
@@ -564,18 +564,18 @@ class FileScanner:
 
         except (OSError, IOError) as e:
             if "premature end of data" in str(e).lower() or "corrupt" in str(e).lower():
-                print(f"    ⚠️  Skipping corrupted image: {os.path.basename(file_path)} (JPEG corruption)")
+                print(f"    [!] Skipping corrupted image: {os.path.basename(file_path)} (JPEG corruption)")
             else:
-                print(f"    ⚠️  Image read error for {os.path.basename(file_path)}: {str(e)}")
+                print(f"    [!] Image read error for {os.path.basename(file_path)}: {str(e)}")
         except Exception as e:
             # Handle Tesseract OCR errors more gracefully
             error_msg = str(e)
             if "corrupt" in error_msg.lower() or "premature end" in error_msg.lower():
-                print(f"    ⚠️  Skipping corrupted image: {os.path.basename(file_path)} (OCR failed - corrupted data)")
+                print(f"    [!] Skipping corrupted image: {os.path.basename(file_path)} (OCR failed - corrupted data)")
             elif "tesseract" in error_msg.lower():
-                print(f"    ⚠️  OCR processing failed for {os.path.basename(file_path)} (Tesseract error)")
+                print(f"    [!] OCR processing failed for {os.path.basename(file_path)} (Tesseract error)")
             else:
-                print(f"    ⚠️  OCR error for {os.path.basename(file_path)}: {error_msg[:100]}...")
+                print(f"    [!] OCR error for {os.path.basename(file_path)}: {error_msg[:100]}...")
 
         return text
 
@@ -591,7 +591,7 @@ class FileScanner:
         """
         text = ""
         if not VIDEO_AVAILABLE or not OCR_AVAILABLE:
-            print(f"    ⚠️  Video/OCR not available for {os.path.basename(file_path)}")
+            print(f"    [!] Video/OCR not available for {os.path.basename(file_path)}")
             return text
 
         temp_frames = []
@@ -600,7 +600,7 @@ class FileScanner:
             video = cv2.VideoCapture(file_path)
 
             if not video.isOpened():
-                print(f"    ⚠️  Failed to open video: {os.path.basename(file_path)}")
+                print(f"    [!] Failed to open video: {os.path.basename(file_path)}")
                 return text
 
             # Get video properties
@@ -643,7 +643,7 @@ class FileScanner:
                                 text += f"\n[Frame {frame_count}]: {frame_text}\n"
 
                     except Exception as ocr_error:
-                        print(f"    ⚠️  OCR error on frame {frame_count}: {str(ocr_error)[:50]}...")
+                        print(f"    [!] OCR error on frame {frame_count}: {str(ocr_error)[:50]}...")
 
                     extracted_count += 1
 
@@ -651,11 +651,11 @@ class FileScanner:
 
             video.release()
 
-            print(f"    ✅ Extracted text from {extracted_count} frames")
+            print(f"    [+] Extracted text from {extracted_count} frames")
 
         except Exception as e:
             error_msg = str(e)
-            print(f"    ⚠️  Video processing error for {os.path.basename(file_path)}: {error_msg[:100]}...")
+            print(f"    [!] Video processing error for {os.path.basename(file_path)}: {error_msg[:100]}...")
         finally:
             # Clean up temporary frames
             for temp_frame in temp_frames:
@@ -688,7 +688,7 @@ class FileScanner:
                 except:
                     pass
         except Exception as e:
-            print(f"    ⚠️  Error reading Excel {file_path}: {str(e)}")
+            print(f"    [!] Error reading Excel {file_path}: {str(e)}")
         return text
 
     def _extract_data_file_text(self, file_path):
@@ -698,7 +698,7 @@ class FileScanner:
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                 text = f.read()
         except Exception as e:
-            print(f"    ⚠️  Error reading data file {file_path}: {str(e)}")
+            print(f"    [!] Error reading data file {file_path}: {str(e)}")
         return text
 
     def _get_file_category(self, file_ext):
@@ -730,7 +730,7 @@ class FileScanner:
         except (OSError, IOError, Exception) as e:
             error_msg = str(e).lower()
             if any(keyword in error_msg for keyword in ['corrupt', 'premature', 'truncated', 'broken']):
-                print(f"    ⚠️  Skipping corrupted image: {os.path.basename(file_path)}")
+                print(f"    [!] Skipping corrupted image: {os.path.basename(file_path)}")
                 return False
             # For other errors, still try to process
             return True
@@ -884,10 +884,10 @@ class FileScanner:
                 <div class="file-item" style="border: 1px solid var(--border-primary); border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; background: var(--bg-card);">
                     <div style="display: flex; justify-content: between; align-items: start; margin-bottom: 0.5rem;">
                         <div style="flex: 1;">
-                            <h4 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">📄 {result['file_name']}</h4>
+                            <h4 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">{result['file_name']}</h4>
                             <div style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">
-                                📁 {result['file_path']}<br>
-                                📊 Size: {self._format_file_size(result['file_size'])} | Type: {result['file_type']}
+                                {result['file_path']}<br>
+                                Size: {self._format_file_size(result['file_size'])} | Type: {result['file_type']}
                             </div>
                         </div>
                         <div style="text-align: right;">
@@ -936,7 +936,7 @@ class FileScanner:
 
                     <div class="file-actions" style="display: flex; gap: 0.5rem;">
                         <button class="btn-secondary" onclick="openFile('{result['file_path']}')" style="font-size: 0.75rem; padding: 0.5rem 1rem;">📂 Open</button>
-                        <button class="btn-secondary" onclick="copyPath('{result['file_path']}')" style="font-size: 0.75rem; padding: 0.5rem 1rem;">📋 Copy Path</button>
+                        <button class="btn-secondary" onclick="copyPath('{result['file_path']}')" style="font-size: 0.75rem; padding: 0.5rem 1rem;">Copy Path</button>
                         <button class="btn-secondary" onclick="showPreview('{i}')" style="font-size: 0.75rem; padding: 0.5rem 1rem;">👁️ Preview</button>
                     </div>
                 </div>

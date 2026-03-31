@@ -470,18 +470,18 @@ class IOCScanner:
                     results['threat_score'] += count * severity_weights.get(ioc_data['severity'], 1)
 
             except re.error as e:
-                print(f"    ⚠️  Regex error for {ioc_name}: {str(e)}")
+                print(f"    [!] Regex error for {ioc_name}: {str(e)}")
                 continue
 
         # Determine threat level
         if results['threat_score'] >= 200:
-            results['threat_level'] = '🔴 CRITICAL'
+            results['threat_level'] = 'CRITICAL'
         elif results['threat_score'] >= 100:
-            results['threat_level'] = '🟠 HIGH'
+            results['threat_level'] = 'HIGH'
         elif results['threat_score'] >= 30:
-            results['threat_level'] = '🟡 MEDIUM'
+            results['threat_level'] = 'MEDIUM'
         else:
-            results['threat_level'] = '🟢 LOW'
+            results['threat_level'] = 'LOW'
 
         return results
 
@@ -499,7 +499,7 @@ class IOCScanner:
 
         # Threat Summary
         html += '<div class="threat-summary" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">\n'
-        html += '<h2 style="margin-top: 0; font-size: 28px;">🛡️ IOC Scanner Results</h2>\n'
+        html += '<h2 style="margin-top: 0; font-size: 28px;">IOC Scanner Results</h2>\n'
         html += f'<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px;">\n'
         html += f'  <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">\n'
         html += f'    <div style="font-size: 32px; font-weight: bold;">{scan_results["total_iocs"]}</div>\n'
@@ -519,7 +519,7 @@ class IOCScanner:
         # Severity Breakdown
         if scan_results['total_iocs'] > 0:
             html += '<div style="margin-bottom: 25px;">\n'
-            html += '<h3 style="color: #2c3e50;">📊 Severity Breakdown</h3>\n'
+            html += '<h3 style="color: #2c3e50;">Severity Breakdown</h3>\n'
             html += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">\n'
 
             severity_colors = {
@@ -541,11 +541,11 @@ class IOCScanner:
 
         # IOCs by Category
         if scan_results['findings_by_category']:
-            html += '<h3 style="color: #2c3e50;">🔍 IOCs by Category</h3>\n'
+            html += '<h3 style="color: #2c3e50;">IOCs by Category</h3>\n'
 
             for category, findings in sorted(scan_results['findings_by_category'].items()):
                 html += f'<div class="ioc-category" style="margin-bottom: 30px;">\n'
-                html += f'<h4 style="background: #34495e; color: white; padding: 12px; border-radius: 8px; margin-bottom: 15px;">📌 {category} ({len(findings)} types)</h4>\n'
+                html += f'<h4 style="background: #34495e; color: white; padding: 12px; border-radius: 8px; margin-bottom: 15px;">{category} ({len(findings)} types)</h4>\n'
                 html += '<table class="forensic-table" style="width: 100%; border-collapse: collapse;">\n'
                 html += '<thead style="background: #ecf0f1;"><tr><th>IOC Type</th><th>Description</th><th>Severity</th><th>Count</th><th>Examples</th></tr></thead>\n'
                 html += '<tbody>\n'
@@ -581,16 +581,16 @@ class IOCScanner:
 
         else:
             html += '<div style="background: #d5f4e6; border-left: 4px solid #27ae60; padding: 20px; border-radius: 8px; margin: 20px 0;">\n'
-            html += '<p style="margin: 0; color: #27ae60; font-weight: bold; font-size: 16px;">✅ No IOCs detected. System appears clean.</p>\n'
+            html += '<p style="margin: 0; color: #27ae60; font-weight: bold; font-size: 16px;">[+] No IOCs detected. System appears clean.</p>\n'
             html += '</div>\n\n'
 
         # Recommendations
         html += '<div style="background: #ecf0f1; padding: 20px; border-radius: 8px; margin-top: 30px;">\n'
-        html += '<h3 style="color: #2c3e50; margin-top: 0;">💡 Investigation Recommendations</h3>\n'
+        html += '<h3 style="color: #2c3e50; margin-top: 0;">Investigation Recommendations</h3>\n'
         html += '<ul style="margin: 10px 0; padding-left: 25px; line-height: 1.8;">\n'
 
         if scan_results['severity_counts']['CRITICAL'] > 0:
-            html += '<li style="color: #e74c3c; font-weight: bold;">🚨 CRITICAL threats detected! Immediate isolation and forensic analysis required.</li>\n'
+            html += '<li style="color: #e74c3c; font-weight: bold;">[!!] CRITICAL threats detected! Immediate isolation and forensic analysis required.</li>\n'
             html += '<li>Capture memory dump for analysis before shutdown.</li>\n'
             html += '<li>Preserve all evidence and maintain chain of custody.</li>\n'
             html += '<li>Analyze all detected IOCs against threat intelligence databases.</li>\n'
@@ -601,7 +601,7 @@ class IOCScanner:
             html += '<li>Review network logs for communication with detected IPs/domains.</li>\n'
 
         if scan_results['findings_by_category'].get('Credentials'):
-            html += '<li style="color: #e67e22;">⚠️ Credentials detected - assume compromised and rotate immediately.</li>\n'
+            html += '<li style="color: #e67e22;">[!] Credentials detected - assume compromised and rotate immediately.</li>\n'
 
         if scan_results['findings_by_category'].get('Persistence'):
             html += '<li>Persistence mechanisms detected - check autorun locations and scheduled tasks.</li>\n'

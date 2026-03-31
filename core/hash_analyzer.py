@@ -333,7 +333,7 @@ class HashAnalyzer:
                     'file': hash_result['file'],
                     'hash': sha256,
                     'threat': self.KNOWN_MALWARE_HASHES[sha256],
-                    'severity': '🔴 CRITICAL'
+                    'severity': 'CRITICAL'
                 }
                 self.malware_detections.append(detection)
 
@@ -389,9 +389,9 @@ class HashAnalyzer:
             return False, error
 
         if calculated_hash.lower() == known_hash.lower():
-            return True, "✅ Hash matches - File integrity verified"
+            return True, "[+] Hash matches - File integrity verified"
         else:
-            return False, f"❌ Hash mismatch - File may be corrupted or modified\nExpected: {known_hash}\nCalculated: {calculated_hash}"
+            return False, f"[ERROR] Hash mismatch - File may be corrupted or modified\nExpected: {known_hash}\nCalculated: {calculated_hash}"
 
     def export_hash_database(self, output_file):
         """Export hash database to JSON file"""

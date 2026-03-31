@@ -86,17 +86,17 @@ def build_os_command_display(commands_dict, descriptions_dict, os_name="Linux"):
 
             # Create display-only output (command reference, not execution)
             cmd_preview = cmd[:200] + "..." if len(cmd) > 200 else cmd
-            output_html = f'''
-            <div class="command-reference">
-                <div class="command-info">
-                    <strong>Command:</strong>
-                    <pre class="command-code">{cmd_preview}</pre>
-                </div>
-                <div class="command-note">
-                    <em>This command would be executed on a {os_name} system.</em>
-                </div>
-            </div>
-            '''
+            output_html = (
+                '<div class="command-reference">'
+                '<div class="command-info">'
+                '<strong>Command:</strong>'
+                f'<pre class="command-code">{cmd_preview}</pre>'
+                '</div>'
+                '<div class="command-note">'
+                f'<em>This command would be executed on a {os_name} system.</em>'
+                '</div>'
+                '</div>'
+            )
 
             # Determine shell type based on command
             if os_name == "Linux":
@@ -180,7 +180,7 @@ class ForensicCollector:
                 output, cmd_type = execute(cmd)
 
                 # Collect data for regex analysis
-                if output and output.strip() and not output.startswith("❌"):
+                if output and output.strip() and not output.startswith("[ERROR]"):
                     self.all_forensic_data.append(f"\n=== {category.upper()} - {cmd[:80]} ===\n{output}\n")
 
                 # Get user-friendly description or fallback to command
@@ -203,7 +203,7 @@ class ForensicCollector:
                     'description': cmd_description,
                     'output': table_html,
                     'type': type_labels.get(cmd_type, self.shell_type),
-                    'success': bool(output and output.strip() and not output.startswith("❌"))
+                    'success': bool(output and output.strip() and not output.startswith("[ERROR]"))
                 })
 
         # Perform Regex Analysis
@@ -258,7 +258,7 @@ class ForensicCollector:
         """
         # Perform IOC Scan Analysis
         if not self.all_forensic_data:
-            print("⚠️  Warning: No forensic data collected yet. Call execute_all_commands() first.")
+            print("[!] Warning: No forensic data collected yet. Call execute_all_commands() first.")
 
         combined_forensic_text = "\n".join(self.all_forensic_data)
         ioc_results = self.ioc_scanner.scan_text(combined_forensic_text)
@@ -303,7 +303,7 @@ class ForensicCollector:
 
         except Exception as e:
             # Log error and return empty structure
-            print(f"⚠️  Browser history analysis error: {str(e)}")
+            print(f"[!] Browser history analysis error: {str(e)}")
             self.browser_history = {}
             self.browser_stats = {}
 
@@ -336,7 +336,7 @@ class ForensicCollector:
 
         except Exception as e:
             # Log error and return empty structure
-            print(f"⚠️  Event log analysis error: {str(e)}")
+            print(f"[!] Event log analysis error: {str(e)}")
             self.eventlog_data = self.eventlog_analyzer.generate_report_data()
             self.eventlog_stats = self.eventlog_analyzer.get_statistics()
 
@@ -366,7 +366,7 @@ class ForensicCollector:
             self.memory_data = memory_data
 
         except Exception as e:
-            print(f"⚠️  Memory analysis error: {str(e)}")
+            print(f"[!] Memory analysis error: {str(e)}")
             self.memory_data = {'os_type': self.current_os, 'error': str(e)}
 
         return memory_data
@@ -388,10 +388,10 @@ class ForensicCollector:
 
         # Ensure we have all required data - set defaults if methods weren't called
         if not hasattr(self, 'file_hashes'):
-            print("⚠️  Warning: execute_all_commands() not called. Using empty hash results.")
+            print("[!] Warning: execute_all_commands() not called. Using empty hash results.")
             self.file_hashes = []
         if not hasattr(self, 'regex_results'):
-            print("⚠️  Warning: Regex analysis not performed. Using empty results.")
+            print("[!] Warning: Regex analysis not performed. Using empty results.")
             self.regex_results = {'iocs': [], 'threat_score': 0, 'threat_level': 'LOW', 'suspicious_patterns': {}}
         if not hasattr(self, 'browser_stats'):
             self.browser_stats = {}
@@ -579,14 +579,14 @@ def run_forensic_collection():
     shell_type = get_shell_type()
     native_commands, os_name = get_commands_for_os(current_os)
 
-    print(f"🖥️  Detected OS: {current_os}")
-    print(f"🐚 Shell type: {shell_type}")
+    print(f"[*] Detected OS: {current_os}")
+    print(f"[*] Shell type: {shell_type}")
 
     # Check admin/root status (cross-platform)
     if is_admin():
-        print("✅ Running with elevated privileges")
+        print("[+] Running with elevated privileges")
     else:
-        print("⚠️  WARNING: Not running with elevated privileges")
+        print("[!] WARNING: Not running with elevated privileges")
         if is_windows():
             print("   Run as Administrator for full forensic data.")
         else:
@@ -596,9 +596,9 @@ def run_forensic_collection():
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     html_file = f"forensic_report_{timestamp}.html"
 
-    print(f"\n📊 Generating HTML forensic report...")
-    print(f"📁 Saving to: {html_file}")
-    print(f"🤖 Auto-detecting command types...\n")
+    print(f"\n[*] Generating HTML forensic report...")
+    print(f"[*] Saving to: {html_file}")
+    print(f"[*] Auto-detecting command types...\n")
 
     # Assets are embedded inline - no external files needed
     assets_path = ""  # Not used anymore, kept for compatibility
@@ -628,7 +628,7 @@ def run_forensic_collection():
             output, cmd_type = execute(cmd)
 
             # Collect data for regex analysis
-            if output and output.strip() and not output.startswith("❌"):
+            if output and output.strip() and not output.startswith("[ERROR]"):
                 all_forensic_data.append(f"\n=== {category.upper()} - {cmd[:80]} ===\n{output}\n")
 
             # Display detected type
@@ -654,16 +654,16 @@ def run_forensic_collection():
                 'description': cmd_description,
                 'output': table_html,
                 'type': type_labels.get(cmd_type, shell_type),
-                'success': bool(output and output.strip() and not output.startswith("❌"))
+                'success': bool(output and output.strip() and not output.startswith("[ERROR]"))
             })
 
     # Perform Regex Analysis
-    print(f"\n[+] 🔍 Performing Regex Analysis on collected data...")
+    print(f"\n[+] [*] Performing Regex Analysis on collected data...")
     combined_forensic_text = "\n".join(all_forensic_data)
     regex_results = regex_analyzer.analyze_text(combined_forensic_text)
 
-    print(f"    ✅ Found {len(regex_results['iocs'])} IOCs")
-    print(f"    ⚠️  Threat Level: {regex_results['threat_level']} (Score: {regex_results['threat_score']})")
+    print(f"    [+] Found {len(regex_results['iocs'])} IOCs")
+    print(f"    [!] Threat Level: {regex_results['threat_level']} (Score: {regex_results['threat_score']})")
 
     # Add to activity log
     activity_log.append({
@@ -672,7 +672,7 @@ def run_forensic_collection():
     })
 
     # Perform Hash Analysis (OS-agnostic)
-    print(f"\n[+] 🔐 Performing Hash Analysis...")
+    print(f"\n[+] [*] Performing Hash Analysis...")
     file_hashes = []
     evidence_dirs = hash_analyzer.get_common_evidence_directories()
 
@@ -688,14 +688,14 @@ def run_forensic_collection():
             print(f"    └─ Scanned: {dir_path}")
 
         valid_hashes = [f for f in file_hashes if not f.get('error') and not f.get('info')]
-        print(f"    ✅ Analyzed {len(valid_hashes)} files")
+        print(f"    [+] Analyzed {len(valid_hashes)} files")
 
         if hash_analyzer.malware_detections:
-            print(f"    🚨 MALWARE DETECTED: {len(hash_analyzer.malware_detections)} known malicious files!")
+            print(f"    [!!] MALWARE DETECTED: {len(hash_analyzer.malware_detections)} known malicious files!")
         if hash_analyzer.suspicious_files:
-            print(f"    ⚠️  Suspicious files: {len(hash_analyzer.suspicious_files)}")
+            print(f"    [!] Suspicious files: {len(hash_analyzer.suspicious_files)}")
     else:
-        print(f"    ⚠️  No standard evidence directories found")
+        print(f"    [!] No standard evidence directories found")
         print(f"    └─ Scanning current directory as example...")
         current_dir = os.path.dirname(os.path.abspath(__file__))
         file_hashes = hash_analyzer.scan_evidence_directory(
@@ -704,7 +704,7 @@ def run_forensic_collection():
             extensions=['.py', '.txt', '.log', '.json']
         )
         valid_hashes = [f for f in file_hashes if not f.get('error') and not f.get('info')]
-        print(f"    ✅ Analyzed {len(valid_hashes)} files (demo mode)")
+        print(f"    [+] Analyzed {len(valid_hashes)} files (demo mode)")
 
     # Add to activity log
     activity_log.append({
@@ -713,7 +713,7 @@ def run_forensic_collection():
     })
 
     # Perform PII Detection Scan
-    print(f"\n[+] 🔍 Performing PII Detection Analysis...")
+    print(f"\n[+] [*] Performing PII Detection Analysis...")
     pii_scanner = FileScanner()
     pii_results = []
 
@@ -745,15 +745,15 @@ def run_forensic_collection():
             total_pii_items = sum(len(result.get('analysis_results', {}).get('pii_findings', [])) for result in pii_results)
             high_risk_files = len([r for r in pii_results if r.get('analysis_results', {}).get('privacy_risk_score', 0) >= 8])
 
-            print(f"    ✅ Found {pii_files} files containing PII")
-            print(f"    📊 Total PII items: {total_pii_items}")
+            print(f"    [+] Found {pii_files} files containing PII")
+            print(f"    [*] Total PII items: {total_pii_items}")
             if high_risk_files > 0:
-                print(f"    🚨 High-risk files: {high_risk_files}")
+                print(f"    [!!] High-risk files: {high_risk_files}")
         else:
-            print(f"    ⚠️  No standard user directories found for PII scanning")
+            print(f"    [!] No standard user directories found for PII scanning")
 
     except Exception as e:
-        print(f"    ❌ PII scanning error: {str(e)}")
+        print(f"    [ERROR] PII scanning error: {str(e)}")
         pii_results = []
 
     # Add to activity log
@@ -763,18 +763,18 @@ def run_forensic_collection():
     })
 
     # Perform IOC Scan Analysis
-    print(f"\n[+] 🛡️  Performing IOC (Indicators of Compromise) Scan...")
+    print(f"\n[+] [*] Performing IOC (Indicators of Compromise) Scan...")
     ioc_results = ioc_scanner.scan_text(combined_forensic_text)
 
-    print(f"    ✅ Threat Level: {ioc_results['threat_level']} (Score: {ioc_results['threat_score']})")
-    print(f"    📊 Total IOCs Found: {ioc_results['total_iocs']}")
-    print(f"    🔴 Critical: {ioc_results['severity_counts']['CRITICAL']}")
-    print(f"    🟠 High: {ioc_results['severity_counts']['HIGH']}")
-    print(f"    🟡 Medium: {ioc_results['severity_counts']['MEDIUM']}")
-    print(f"    🟢 Low: {ioc_results['severity_counts']['LOW']}")
+    print(f"    [+] Threat Level: {ioc_results['threat_level']} (Score: {ioc_results['threat_score']})")
+    print(f"    [*] Total IOCs Found: {ioc_results['total_iocs']}")
+    print(f"    [CRITICAL] Critical: {ioc_results['severity_counts']['CRITICAL']}")
+    print(f"    [HIGH] High: {ioc_results['severity_counts']['HIGH']}")
+    print(f"    [MEDIUM] Medium: {ioc_results['severity_counts']['MEDIUM']}")
+    print(f"    [LOW] Low: {ioc_results['severity_counts']['LOW']}")
 
     if ioc_results['total_iocs'] > 0:
-        print(f"    ⚠️  Categories detected: {', '.join(ioc_results['findings_by_category'].keys())}")
+        print(f"    [!] Categories detected: {', '.join(ioc_results['findings_by_category'].keys())}")
 
     # Add to activity log
     activity_log.append({
@@ -789,7 +789,7 @@ def run_forensic_collection():
     })
 
     # Perform Encrypted Files Detection
-    print(f"\n[+] 🔐 Performing Encrypted Files Detection...")
+    print(f"\n[+] [*] Performing Encrypted Files Detection...")
     encrypted_scanner = EncryptedFileScanner()
     encrypted_files = []
 
@@ -799,20 +799,20 @@ def run_forensic_collection():
 
         encrypted_files = encrypted_scanner.scan_user_directories(max_files_per_dir=250)
 
-        print(f"    ✅ Scanned {encrypted_scanner.stats['total_scanned']} files")
-        print(f"    🔒 Found {encrypted_scanner.stats['encrypted_found']} encrypted files")
+        print(f"    [+] Scanned {encrypted_scanner.stats['total_scanned']} files")
+        print(f"    [*] Found {encrypted_scanner.stats['encrypted_found']} encrypted files")
 
         if encrypted_scanner.stats['efs_files'] > 0:
-            print(f"    🔐 Windows EFS: {encrypted_scanner.stats['efs_files']}")
+            print(f"    [*] Windows EFS: {encrypted_scanner.stats['efs_files']}")
         if encrypted_scanner.stats['password_protected'] > 0:
-            print(f"    🔑 Password-Protected: {encrypted_scanner.stats['password_protected']}")
+            print(f"    [*] Password-Protected: {encrypted_scanner.stats['password_protected']}")
         if encrypted_scanner.stats['encrypted_containers'] > 0:
-            print(f"    💾 Encrypted Containers: {encrypted_scanner.stats['encrypted_containers']}")
+            print(f"    [*] Encrypted Containers: {encrypted_scanner.stats['encrypted_containers']}")
         if encrypted_scanner.stats['filevault_files'] > 0:
-            print(f"    🍎 macOS Encrypted: {encrypted_scanner.stats['filevault_files']}")
+            print(f"    [*] macOS Encrypted: {encrypted_scanner.stats['filevault_files']}")
 
     except Exception as e:
-        print(f"    ❌ Encrypted file scanning error: {str(e)}")
+        print(f"    [ERROR] Encrypted file scanning error: {str(e)}")
 
     encrypted_data = encrypted_scanner.generate_report_data()
 
@@ -824,7 +824,7 @@ def run_forensic_collection():
 
     # Perform Browser History Analysis
     print(f"\n{'='*70}")
-    print(f"🌐 BROWSER HISTORY ANALYSIS")
+    print(f"[*] BROWSER HISTORY ANALYSIS")
     print(f"{'='*70}")
     browser_analyzer = BrowserHistoryAnalyzer()
     browser_history = {}
@@ -840,14 +840,14 @@ def run_forensic_collection():
         browser_stats = browser_analyzer.get_statistics(browser_history)
 
         print(f"{'='*70}")
-        print(f"✅ BROWSER HISTORY SUMMARY:")
+        print(f"[+] BROWSER HISTORY SUMMARY:")
         print(f"   Browsers analyzed: {browser_stats['browsers_found']}")
         print(f"   Total entries: {browser_stats['total_entries']}")
         print(f"   Total visits: {browser_stats['total_visits']}")
         print(f"{'='*70}\n")
 
     except Exception as e:
-        print(f"    ❌ Browser history error: {str(e)}")
+        print(f"    [ERROR] Browser history error: {str(e)}")
 
     # Add to activity log
     activity_log.append({
@@ -857,7 +857,7 @@ def run_forensic_collection():
 
     # Perform Memory Analysis (Cross-Platform)
     print(f"\n{'='*70}")
-    print(f"🧠 MEMORY ANALYSIS")
+    print(f"[*] MEMORY ANALYSIS")
     print(f"{'='*70}")
     memory_data = {}
 
@@ -868,7 +868,7 @@ def run_forensic_collection():
 
         summary = memory_data.get('summary', {})
         print(f"{'='*70}")
-        print(f"✅ MEMORY ANALYSIS SUMMARY ({current_os}):")
+        print(f"[+] MEMORY ANALYSIS SUMMARY ({current_os}):")
         if current_os == OS_LINUX:
             print(f"   Total RAM: {summary.get('total_ram', 'N/A')}")
             print(f"   Sources available: {summary.get('sources_available', 0)}")
@@ -883,7 +883,7 @@ def run_forensic_collection():
         print(f"{'='*70}\n")
 
     except Exception as e:
-        print(f"    ❌ Memory analysis error: {str(e)}")
+        print(f"    [ERROR] Memory analysis error: {str(e)}")
         memory_data = {'os_type': current_os, 'error': str(e)}
 
     # Add to activity log
@@ -895,7 +895,7 @@ def run_forensic_collection():
 
     # Perform Registry Analysis
     print(f"\n{'='*70}")
-    print(f"📋 REGISTRY ANALYSIS")
+    print(f"[*] REGISTRY ANALYSIS")
     print(f"{'='*70}")
     registry_analyzer = RegistryAnalyzer()
     registry_data = {}
@@ -908,7 +908,7 @@ def run_forensic_collection():
         registry_data = registry_analyzer.generate_report_data()
 
         print(f"{'='*70}")
-        print(f"✅ REGISTRY ANALYSIS SUMMARY:")
+        print(f"[+] REGISTRY ANALYSIS SUMMARY:")
         print(f"   Total artifacts: {registry_stats['total_artifacts']}")
         print(f"   UserAssist entries: {registry_stats['userassist_count']}")
         print(f"   Run keys: {registry_stats['run_keys_count']}")
@@ -917,7 +917,7 @@ def run_forensic_collection():
         print(f"{'='*70}\n")
 
     except Exception as e:
-        print(f"    ❌ Registry analysis error: {str(e)}")
+        print(f"    [ERROR] Registry analysis error: {str(e)}")
         # Provide empty data structure if analysis fails
         registry_data = registry_analyzer.generate_report_data()
         registry_stats = registry_analyzer.get_statistics()
@@ -930,7 +930,7 @@ def run_forensic_collection():
 
     # Perform Event Log Analysis
     print(f"\n{'='*70}")
-    print(f"📊 EVENT LOG ANALYSIS")
+    print(f"[*] EVENT LOG ANALYSIS")
     print(f"{'='*70}")
     eventlog_analyzer = EventLogAnalyzer()
     eventlog_data = {}
@@ -943,7 +943,7 @@ def run_forensic_collection():
         eventlog_data = eventlog_analyzer.generate_report_data()
 
         print(f"{'='*70}")
-        print(f"✅ EVENT LOG ANALYSIS SUMMARY:")
+        print(f"[+] EVENT LOG ANALYSIS SUMMARY:")
         print(f"   Total events: {eventlog_stats['total_events']}")
         print(f"   Security events: {eventlog_stats['security_events']}")
         print(f"   System events: {eventlog_stats['system_events']}")
@@ -953,7 +953,7 @@ def run_forensic_collection():
         print(f"{'='*70}\n")
 
     except Exception as e:
-        print(f"    ❌ Event log analysis error: {str(e)}")
+        print(f"    [ERROR] Event log analysis error: {str(e)}")
         # Provide empty data structure if analysis fails
         eventlog_data = eventlog_analyzer.generate_report_data()
         eventlog_stats = eventlog_analyzer.get_statistics()
@@ -966,9 +966,9 @@ def run_forensic_collection():
 
     # Perform MFT (Master File Table) Analysis
     print(f"\n{'='*70}")
-    print(f"💾 MFT ANALYSIS - DELETED FILES & RECOVERY")
+    print(f"[*] MFT ANALYSIS - DELETED FILES & RECOVERY")
     print(f"{'='*70}")
-    # ⚠️ CRITICAL: Enable scan_all_volumes=True to detect deleted files across ALL drives
+    # [!] CRITICAL: Enable scan_all_volumes=True to detect deleted files across ALL drives
     # This ensures files deleted from D:, E:, etc. are found (not just C: drive)
     mft_analyzer = MFTAnalyzer(volume_path="C:", scan_all_volumes=True)
     mft_data = {}
@@ -980,7 +980,7 @@ def run_forensic_collection():
         mft_stats = mft_analyzer.get_statistics()
 
         print(f"{'='*70}")
-        print(f"✅ MFT ANALYSIS SUMMARY:")
+        print(f"[+] MFT ANALYSIS SUMMARY:")
         print(f"   Total MFT entries: {mft_stats['total_entries']:,}")
         print(f"   Active entries: {mft_stats['active_entries']:,}")
         print(f"   Deleted files: {mft_stats['deleted_entries']:,}")
@@ -993,7 +993,7 @@ def run_forensic_collection():
         print(f"{'='*70}\n")
 
     except Exception as e:
-        print(f"    ❌ MFT analysis error: {str(e)}")
+        print(f"    [ERROR] MFT analysis error: {str(e)}")
         # Provide empty data structure if analysis fails
         mft_data = mft_analyzer._get_unavailable_data()
         mft_stats = mft_analyzer.get_statistics()
@@ -1011,14 +1011,14 @@ def run_forensic_collection():
         analyzer_path = f'mft_analyzer_state_{timestamp}.pkl'
         with open(analyzer_path, 'wb') as f:
             pickle.dump(mft_analyzer, f)
-        print(f"💾 MFT analyzer state saved to: {analyzer_path}")
+        print(f"[*] MFT analyzer state saved to: {analyzer_path}")
         print(f"   Use 'python mft_recovery_tool.py {analyzer_path}' to recover files\n")
     except Exception as e:
-        print(f"⚠️  Could not save MFT analyzer state: {str(e)}\n")
+        print(f"[!] Could not save MFT analyzer state: {str(e)}\n")
 
     # Perform Pagefile.sys Analysis
     print(f"\n{'='*70}")
-    print(f"💾 PAGEFILE.SYS ANALYSIS - VIRTUAL MEMORY FORENSICS")
+    print(f"[*] PAGEFILE.SYS ANALYSIS - VIRTUAL MEMORY FORENSICS")
     print(f"{'='*70}")
     pagefile_analyzer = PagefileAnalyzer()
     pagefile_data = {}
@@ -1030,17 +1030,17 @@ def run_forensic_collection():
         pagefile_stats = pagefile_analyzer.get_statistics()
 
         print(f"{'='*70}")
-        print(f"✅ PAGEFILE ANALYSIS SUMMARY:")
+        print(f"[+] PAGEFILE ANALYSIS SUMMARY:")
         print(f"   Strings extracted: {pagefile_stats['strings_extracted']:,}")
         print(f"   URLs found: {pagefile_stats['urls_found']:,}")
         print(f"   Email addresses: {pagefile_stats['emails_found']:,}")
         print(f"   File paths: {pagefile_stats['paths_found']:,}")
         print(f"   IP addresses: {pagefile_stats['ips_found']:,}")
-        print(f"   🔐 Sensitive items: {pagefile_stats['sensitive_items']:,}")
+        print(f"   [*] Sensitive items: {pagefile_stats['sensitive_items']:,}")
         print(f"{'='*70}\n")
 
     except Exception as e:
-        print(f"    ❌ Pagefile analysis error: {str(e)}")
+        print(f"    [ERROR] Pagefile analysis error: {str(e)}")
         # Provide empty data structure if analysis fails
         pagefile_data = pagefile_analyzer._get_unavailable_data()
         pagefile_stats = pagefile_analyzer.get_statistics()
@@ -1155,16 +1155,16 @@ def run_forensic_collection():
         # Write HTML footer
         f.write(generate_html_footer(assets_path))
 
-    print(f"\n✅ Done! Open the HTML report:")
-    print(f"📄 {html_file}")
-    print(f"\n💡 Modern LEA Triage Dashboard Generated!")
-    print(f"🎨 Features:")
+    print(f"\n[+] Done! Open the HTML report:")
+    print(f"[*] {html_file}")
+    print(f"\n[*] Modern LEA Triage Dashboard Generated!")
+    print(f"[*] Features:")
     print(f"   • Dark professional theme")
     print(f"   • Tab-based navigation (Dashboard/Commands/Hash/PII/Regex/IOC)")
     print(f"   • OS selector (Windows/Linux/macOS) — {current_os} auto-selected")
     print(f"   • Interactive cards and search")
     print(f"   • Real-time stats and activity feed")
-    print(f"\n📋 Report includes:")
+    print(f"\n[*] Report includes:")
     print(f"   • {len(all_forensic_data)} forensic command results")
     print(f"   • {len(regex_results['iocs'])} IOCs detected")
     print(f"   • {len(file_hashes) if file_hashes else 0} files analyzed")
@@ -1178,7 +1178,7 @@ if __name__ == "__main__":
         # Windows: offer UAC elevation
         if not is_admin():
             print("=" * 60)
-            print("🔒 ADMINISTRATOR PRIVILEGES REQUIRED")
+            print("[*] ADMINISTRATOR PRIVILEGES REQUIRED")
             print("=" * 60)
             print("\nThis forensic tool needs Administrator privileges for:")
             print("  • netstat -naob (process-to-connection mapping)")
@@ -1193,17 +1193,17 @@ if __name__ == "__main__":
             choice = input("\nYour choice (1 or 2): ").strip()
 
             if choice == "1":
-                print("\n🔄 Restarting with Administrator privileges...")
+                print("\n[*] Restarting with Administrator privileges...")
                 print("   (You may see a UAC prompt - click 'Yes')\n")
                 run_as_admin()
             else:
-                print("\n⚠️  Continuing without Administrator privileges...")
+                print("\n[!] Continuing without Administrator privileges...")
                 print("   Some commands may fail.\n")
     else:
         # Linux / macOS
         if not is_admin():
             print("=" * 60)
-            print(f"🔒 ROOT PRIVILEGES RECOMMENDED ({detected})")
+            print(f"[*] ROOT PRIVILEGES RECOMMENDED ({detected})")
             print("=" * 60)
             print("\nSome forensic commands require root/sudo for:")
             print("  • Full process listing")
@@ -1212,7 +1212,7 @@ if __name__ == "__main__":
             print("  • System log access")
             print(f"\nRe-run with: sudo python3 {sys.argv[0]}")
             print("=" * 60)
-            print("\n⚠️  Continuing without root privileges...")
+            print("\n[!] Continuing without root privileges...")
             print("   Some commands may produce incomplete results.\n")
 
     run_forensic_collection()

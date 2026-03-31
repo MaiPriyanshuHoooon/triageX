@@ -94,7 +94,7 @@ class BrowserHistoryAnalyzer:
         try:
             shutil.copy2(db_path, temp_db)
         except Exception as e:
-            print(f"    ⚠️  Failed to copy database: {e}")
+            print(f"    [!] Failed to copy database: {e}")
             return []
 
         results = []
@@ -201,7 +201,7 @@ class BrowserHistoryAnalyzer:
         try:
             shutil.copy2(db_path, temp_db)
         except Exception as e:
-            print(f"    ⚠️  Failed to copy Firefox database: {e}")
+            print(f"    [!] Failed to copy Firefox database: {e}")
             return []
 
         results = []
@@ -349,13 +349,13 @@ class BrowserHistoryAnalyzer:
         try:
             shutil.copy2(db_path, temp_db)
         except PermissionError:
-            print(f"    ⚠️  Safari: Permission Denied")
-            print(f"       💡 Solution: Grant Terminal 'Full Disk Access' in System Preferences")
+            print(f"    [!] Safari: Permission Denied")
+            print(f"       Solution: Grant Terminal 'Full Disk Access' in System Preferences")
             print(f"          Go to: System Preferences → Security & Privacy → Privacy → Full Disk Access")
             print(f"          Add: Terminal.app (or your terminal application)")
             return []
         except Exception as e:
-            print(f"    ⚠️  Failed to access Safari database: {e}")
+            print(f"    [!] Failed to access Safari database: {e}")
             return []
 
         results = []
@@ -418,7 +418,7 @@ class BrowserHistoryAnalyzer:
             conn.close()
 
         except Exception as e:
-            print(f"    ⚠️  Error extracting Safari history: {e}")
+            print(f"    [!] Error extracting Safari history: {e}")
 
         finally:
             if os.path.exists(temp_db):
@@ -443,11 +443,11 @@ class BrowserHistoryAnalyzer:
         all_history = {}
         paths = self.get_browser_paths()
 
-        print(f"[+] 🌐 Analyzing Browser History (Last {days_back} days)...")
+        print(f"[+] Analyzing Browser History (Last {days_back} days)...")
         if limit:
-            print(f"    📊 Limiting to {limit} entries per browser")
+            print(f"    Limiting to {limit} entries per browser")
         else:
-            print(f"    📊 Retrieving ALL available history (no limit)")
+            print(f"    Retrieving ALL available history (no limit)")
 
         for browser, db_path in paths.items():
             if not db_path:
@@ -470,14 +470,14 @@ class BrowserHistoryAnalyzer:
 
                 if history:
                     all_history[browser] = history
-                    print(f"       ✅ Found {len(history)} entries")
+                    print(f"       [+] Found {len(history)} entries")
                 else:
-                    print(f"       ⚠️  No history found in date range")
+                    print(f"       [!] No history found in date range")
 
             except Exception as e:
-                print(f"       ❌ Error: {e}")
+                print(f"       [ERROR] Error: {e}")
 
-        print(f"    ✅ Completed browser analysis: {len(all_history)} browsers with data\n")
+        print(f"    [+] Completed browser analysis: {len(all_history)} browsers with data\n")
         return all_history
 
     def _extract_domain(self, url):

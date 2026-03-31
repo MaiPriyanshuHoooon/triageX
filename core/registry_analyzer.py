@@ -62,14 +62,14 @@ class RegistryAnalyzer:
         Requires Windows and appropriate permissions
         """
         if not self.is_windows:
-            print("    ⚠️  Not running on Windows - live registry analysis not available")
-            print("    💡 Use offline analysis mode for registry hive files")
+            print("    [!] Not running on Windows - live registry analysis not available")
+            print("    Use offline analysis mode for registry hive files")
             return self.artifacts
 
         try:
             import winreg
 
-            print("[+] 📋 Analyzing Windows Registry...")
+            print("[+] Analyzing Windows Registry...")
 
             # Extract UserAssist (program execution)
             self._extract_userassist_live(winreg)
@@ -98,12 +98,12 @@ class RegistryAnalyzer:
             # Extract Services
             self._extract_services_live(winreg)
 
-            print(f"    ✅ Registry analysis complete")
+            print(f"    [+] Registry analysis complete")
 
         except ImportError:
-            print("    ⚠️  winreg module not available")
+            print("    [!] winreg module not available")
         except Exception as e:
-            print(f"    ⚠️  Registry analysis error: {str(e)}")
+            print(f"    [!] Registry analysis error: {str(e)}")
 
         return self.artifacts
 
@@ -655,4 +655,4 @@ if __name__ == "__main__":
         print(f"  MRU Lists: {stats['mru_lists_count']}")
         print(f"  Services: {stats['services_count']}")
     else:
-        print("\n⚠️  Not running on Windows - registry analysis requires Windows OS")
+        print("\n[!] Not running on Windows - registry analysis requires Windows OS")

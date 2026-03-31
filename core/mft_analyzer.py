@@ -136,14 +136,14 @@ class MFTAnalyzer:
 
                         if result and fs_name.value == 'NTFS':
                             volumes.append(drive)
-                            print(f"       ✅ Found NTFS volume: {drive}")
+                            print(f"       [+] Found NTFS volume: {drive}")
                     except:
                         continue
 
             return volumes
 
         except Exception as e:
-            print(f"    ⚠️  Could not detect volumes: {e}")
+            print(f"    [!] Could not detect volumes: {e}")
             return [self.volume_path]  # Fallback to default
 
     def analyze(self) -> Dict:
@@ -157,19 +157,19 @@ class MFTAnalyzer:
         print("\n[+] Starting MFT Analysis...")
 
         if not self.is_windows:
-            print("    ⚠️  MFT Analysis requires Windows OS")
+            print("    [!] MFT Analysis requires Windows OS")
             return self._get_unavailable_data()
 
         # Check for Administrator privileges
         if not self._is_admin():
-            print("    ⚠️  Administrator privileges required for MFT access")
+            print("    [!] Administrator privileges required for MFT access")
             return self._get_unavailable_data()
 
         # Check if pytsk3 is available
         try:
             import pytsk3
         except ImportError:
-            print("    ⚠️  pytsk3 module not installed. Run: pip install pytsk3")
+            print("    [!] pytsk3 module not installed. Run: pip install pytsk3")
             return self._get_unavailable_data()
 
         try:
@@ -177,16 +177,16 @@ class MFTAnalyzer:
             volumes_to_scan = []
 
             if self.scan_all_volumes:
-                print("    🔍 Detecting all NTFS volumes on system...")
+                print("    Detecting all NTFS volumes on system...")
                 volumes_to_scan = self._get_ntfs_volumes()
 
                 if not volumes_to_scan:
-                    print("    ⚠️  No NTFS volumes found, scanning default volume only")
+                    print("    [!] No NTFS volumes found, scanning default volume only")
                     volumes_to_scan = [self.volume_path]
                 else:
-                    print(f"    ✅ Will scan {len(volumes_to_scan)} NTFS volume(s): {', '.join(volumes_to_scan)}")
+                    print(f"    [+] Will scan {len(volumes_to_scan)} NTFS volume(s): {', '.join(volumes_to_scan)}")
             else:
-                print(f"    📁 Single volume mode: scanning {self.volume_path} only")
+                print(f"    Single volume mode: scanning {self.volume_path} only")
                 volumes_to_scan = [self.volume_path]
 
             # Step 1: Scan each volume
@@ -202,11 +202,11 @@ class MFTAnalyzer:
                 fs_info = self._open_volume(pytsk3)
 
                 if not fs_info:
-                    print(f"    ⚠️  Failed to open volume {volume}, skipping...")
+                    print(f"    [!] Failed to open volume {volume}, skipping...")
                     continue
 
                 # Read and parse $MFT for this volume
-                print(f"    📊 Reading Master File Table from {volume}...")
+                print(f"    Reading Master File Table from {volume}...")
                 self._read_mft_for_volume(fs_info, pytsk3, volume)
 
             # Step 2: Reconstruct directory tree (after all volumes scanned)
@@ -214,24 +214,24 @@ class MFTAnalyzer:
             self._reconstruct_paths()
 
             # Step 3: Classify and analyze files
-            print("    🔍 Analyzing file entries...")
+            print("    Analyzing file entries...")
             self._classify_files()
 
             # Step 4: Detect anomalies
-            print("    ⚠️  Detecting anomalies...")
+            print("    [!] Detecting anomalies...")
             self._detect_anomalies()
 
             # Step 5: Assess recoverability
-            print("    💾 Assessing file recoverability...")
+            print("    Assessing file recoverability...")
             self._assess_recoverability()
 
-            print(f"    ✅ MFT Analysis complete!")
+            print(f"    [+] MFT Analysis complete!")
             print(f"       - Total entries: {self.stats['total_entries']}")
             print(f"       - Deleted files: {self.stats['deleted_entries']}")
             print(f"       - Recoverable: {self.stats['recoverable_files']}")
 
         except Exception as e:
-            print(f"    ❌ MFT Analysis error: {str(e)}")
+            print(f"    [ERROR] MFT Analysis error: {str(e)}")
             return self._get_unavailable_data()
 
         return self._get_results()
@@ -257,7 +257,7 @@ class MFTAnalyzer:
         for each scan to detect new deletions.
         """
         try:
-            # ⚠️ CRITICAL FIX: Force Windows to flush filesystem buffers
+            # [!] CRITICAL FIX: Force Windows to flush filesystem buffers
             # This ensures MFT changes are written to disk before we read
             try:
                 import ctypes
@@ -286,13 +286,13 @@ class MFTAnalyzer:
                     # Flush file buffers to force disk write
                     kernel32.FlushFileBuffers(handle)
                     kernel32.CloseHandle(handle)
-                    print(f"       🔄 Forced Windows filesystem buffer flush")
+                    print(f"       Forced Windows filesystem buffer flush")
 
             except Exception as flush_error:
                 # Non-critical - continue even if flush fails
-                print(f"       ⚠️  Could not flush buffers: {flush_error}")
+                print(f"       [!] Could not flush buffers: {flush_error}")
 
-            # ⚠️ CRITICAL FIX: Force fresh volume access
+            # [!] CRITICAL FIX: Force fresh volume access
             # pytsk3 caches the volume state when opened, so we must create a NEW handle
             # every time to see recently deleted files
 
@@ -306,13 +306,13 @@ class MFTAnalyzer:
 
             # Verify it's NTFS
             if fs_info.info.ftype != pytsk3.TSK_FS_TYPE_NTFS:
-                print(f"    ⚠️  Volume is not NTFS (type: {fs_info.info.ftype})")
+                print(f"    [!] Volume is not NTFS (type: {fs_info.info.ftype})")
                 return None
 
             return fs_info
 
         except Exception as e:
-            print(f"    ❌ Volume access error: {str(e)}")
+            print(f"    [ERROR] Volume access error: {str(e)}")
             return None
 
     def _read_mft_for_volume(self, fs_info, pytsk3, volume_letter: str):
@@ -328,9 +328,9 @@ class MFTAnalyzer:
         """
 
         try:
-            # ⚠️ CRITICAL: Re-open filesystem to flush any cached data
+            # [!] CRITICAL: Re-open filesystem to flush any cached data
             # This ensures we see the most recent MFT state
-            print(f"       🔄 Flushing MFT cache for fresh read...")
+            print(f"       Flushing MFT cache for fresh read...")
 
             # Close and reopen filesystem handle (forces kernel cache flush)
             # Note: pytsk3 doesn't have explicit cache flush, so we rely on reopen
@@ -364,7 +364,7 @@ class MFTAnalyzer:
                     mft_record = self._parse_mft_record(record_data, entry_num)
 
                     if mft_record:
-                        # ⚠️ CRITICAL: Add volume information to the record
+                        # [!] CRITICAL: Add volume information to the record
                         # This allows tracking which drive the file came from
                         mft_record.volume_letter = volume_letter
 
@@ -382,18 +382,18 @@ class MFTAnalyzer:
                     # Skip corrupted records
                     continue
 
-            print(f"       ✅ Parsed {self.stats['total_entries']:,} valid MFT records from {volume_letter}")
+            print(f"       [+] Parsed {self.stats['total_entries']:,} valid MFT records from {volume_letter}")
 
-            # ⚠️ DIAGNOSTIC: Show scan range for debugging
-            print(f"       📊 Scan Statistics:")
+            # [!] DIAGNOSTIC: Show scan range for debugging
+            print(f"       Scan Statistics:")
             print(f"          - MFT entries scanned: 0 to {records_to_parse-1:,}")
             print(f"          - Total MFT size: {total_records:,} entries")
             if records_to_parse < total_records:
-                print(f"          ⚠️  NOTE: Not all entries scanned (limit: {self.max_entries_to_parse:,})")
+                print(f"          [!] NOTE: Not all entries scanned (limit: {self.max_entries_to_parse:,})")
                 print(f"          If file not found, it may be in entries {records_to_parse:,} - {total_records:,}")
 
         except Exception as e:
-            print(f"    ❌ MFT read error: {str(e)}")
+            print(f"    [ERROR] MFT read error: {str(e)}")
 
     def _parse_mft_record(self, data: bytes, entry_num: int) -> Optional[MFTRecord]:
         """
@@ -572,7 +572,7 @@ class MFTAnalyzer:
             if record.is_deleted:
                 self.stats['deleted_entries'] += 1
 
-                # ⚠️ CHECK: Was this file deleted very recently? (last 60 seconds)
+                # [!] CHECK: Was this file deleted very recently? (last 60 seconds)
                 # Windows may not have flushed MFT to disk yet
                 if record.modified:
                     time_since_deletion = (datetime.now() - record.modified).total_seconds()

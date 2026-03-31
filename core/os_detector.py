@@ -88,16 +88,16 @@ def run_as_admin():
             if ret > 32:
                 sys.exit(0)
             else:
-                print(f"❌ Failed to elevate privileges (Error Code: {ret})")
+                print(f"[ERROR] Failed to elevate privileges (Error Code: {ret})")
                 print("Please run this script as Administrator manually.")
                 input("\nPress ENTER to continue without admin privileges...")
         except Exception as e:
-            print(f"❌ Failed to elevate privileges: {e}")
+            print(f"[ERROR] Failed to elevate privileges: {e}")
             input("Press ENTER to continue without admin privileges...")
     else:
         # Linux / macOS
         print("=" * 60)
-        print("🔒 ROOT/SUDO PRIVILEGES RECOMMENDED")
+        print("ROOT/SUDO PRIVILEGES RECOMMENDED")
         print("=" * 60)
         print("\nSome forensic features require elevated privileges:")
         print("  • USB device history")

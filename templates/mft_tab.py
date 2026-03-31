@@ -51,7 +51,7 @@ def generate_mft_tab(mft_data, mft_stats):
     <div id="tab-mft" class="tab-content">
         <div class="analysis-header">
             <div class="header-left">
-                <h1>💾 MFT Analysis - Deleted Files & Recovery</h1>
+                <h1>MFT Analysis - Deleted Files & Recovery</h1>
                 <p>NTFS Master File Table forensic analysis and file recovery assessment</p>
             </div>
         </div>
@@ -63,7 +63,9 @@ def generate_mft_tab(mft_data, mft_stats):
         <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);
                     border-radius: 12px; padding: 24px; margin: 20px 0;">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <div style="font-size: 48px;">ℹ️</div>
+                <div style="color: #3b82f6;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </div>
                 <div>
                     <h3 style="margin: 0 0 8px 0; color: #3b82f6;">MFT Analysis Unavailable</h3>
                     <p style="margin: 0; color: #9ca3af; line-height: 1.6;">
@@ -88,7 +90,9 @@ def generate_mft_tab(mft_data, mft_stats):
         <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);
                     border-radius: 12px; padding: 24px; margin: 20px 0;">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <div style="font-size: 48px;">⚠️</div>
+                <div style="color: #ef4444;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                </div>
                 <div>
                     <h3 style="margin: 0 0 8px 0; color: #ef4444;">MFT Analysis Failed</h3>
                     <p style="margin: 0; color: #9ca3af; line-height: 1.6;">
@@ -151,7 +155,7 @@ def generate_mft_tab(mft_data, mft_stats):
             html += '''
             <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);
                         border-radius: 12px; padding: 24px; margin: 20px 0; text-align: center;">
-                <div style="font-size: 48px;">✅</div>
+                <div style="font-size: 48px;">&#10003;</div>
                 <h3 style="margin: 10px 0; color: #10b981;">No Deleted Files Found</h3>
                 <p style="color: #9ca3af; margin: 0;">
                     No deleted file records detected in MFT analysis. Volume appears clean.
@@ -169,7 +173,7 @@ def generate_mft_tab(mft_data, mft_stats):
             <div class="command-card">
                 <div class="command-card-header" onclick="toggleCommandOutput(this)">
                     <div class="command-title">
-                        <span class="cmd-type-badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">📊 STATISTICS</span>
+                        <span class="cmd-type-badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">STATISTICS</span>
                         <span>Additional MFT Metrics</span>
                     </div>
                     <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -197,7 +201,7 @@ def generate_mft_tab(mft_data, mft_stats):
                             </div>
                         </div>
                         <div style="margin-top: 16px; padding: 16px; background: rgba(59, 130, 246, 0.1); border-radius: 8px; border-left: 4px solid #3b82f6;">
-                            <strong style="color: #3b82f6;">💡 Analysis Notes:</strong><br>
+                            <strong style="color: #3b82f6;">Analysis Notes:</strong><br>
                             • Volume analyzed: <strong>{volume_path}</strong><br>
                             • Parsed <strong>{total_entries:,}</strong> MFT entries<br>
                             • Recovery assessment based on cluster allocation status<br>
@@ -215,11 +219,11 @@ def generate_mft_tab(mft_data, mft_stats):
     <script>
     // MFT File Recovery Functions
     function recoverFile(entryNumber, filename) {
-        const message = `🚀 FILE RECOVERY SYSTEM\\n` +
+        const message = `FILE RECOVERY SYSTEM\\n` +
               `${'='.repeat(60)}\\n\\n` +
-              `📄 File: ${filename}\\n` +
-              `🔢 MFT Entry: #${entryNumber}\\n\\n` +
-              `✅ RECOVERY READY!\\n\\n` +
+              `File: ${filename}\\n` +
+              `MFT Entry: #${entryNumber}\\n\\n` +
+              `RECOVERY READY\\n\\n` +
               `To recover this file, use the command-line tool:\\n\\n` +
               `  1. Locate the analyzer state file in your report directory:\\n` +
               `     mft_analyzer_state_<timestamp>.pkl\\n\\n` +
@@ -227,53 +231,53 @@ def generate_mft_tab(mft_data, mft_stats):
               `     python mft_recovery_tool.py mft_analyzer_state_<timestamp>.pkl\\n\\n` +
               `  3. Select option 3 (Recover a file)\\n\\n` +
               `  4. Enter entry number: ${entryNumber}\\n\\n` +
-              `📁 Recovered files will be saved to your working directory\\n` +
-              `📋 See MFT_RECOVERY_GUIDE.md for detailed instructions\\n\\n` +
+              `Recovered files will be saved to your working directory\\n` +
+              `See MFT_RECOVERY_GUIDE.md for detailed instructions\\n\\n` +
               `${'='.repeat(60)}\\n\\n` +
-              `💡 TIP: Resident files (< 700 bytes) can be fully recovered.\\n` +
+              `TIP: Resident files (< 700 bytes) can be fully recovered.\\n` +
               `   Non-resident files require cluster-level recovery.`;
 
         alert(message);
     }
 
     function previewFile(entryNumber, filename) {
-        const message = `👁️ FILE PREVIEW SYSTEM\\n` +
+        const message = `FILE PREVIEW SYSTEM\\n` +
               `${'='.repeat(60)}\\n\\n` +
-              `📄 File: ${filename}\\n` +
-              `🔢 MFT Entry: #${entryNumber}\\n\\n` +
+              `File: ${filename}\\n` +
+              `MFT Entry: #${entryNumber}\\n\\n` +
               `To preview this file's content:\\n\\n` +
               `  1. Run the recovery tool:\\n` +
               `     python mft_recovery_tool.py mft_analyzer_state_<timestamp>.pkl\\n\\n` +
               `  2. Select option 4 (Preview file content)\\n\\n` +
               `  3. Enter entry number: ${entryNumber}\\n\\n` +
-              `📊 Preview shows:\\n` +
-              `   • Hex dump of file content\\n` +
-              `   • Text preview (if applicable)\\n` +
-              `   • File type detection\\n` +
-              `   • Content analysis\\n\\n` +
+              `Preview shows:\\n` +
+              `   - Hex dump of file content\\n` +
+              `   - Text preview (if applicable)\\n` +
+              `   - File type detection\\n` +
+              `   - Content analysis\\n\\n` +
               `${'='.repeat(60)}\\n\\n` +
-              `💡 Only available for resident files stored in MFT`;
+              `Only available for resident files stored in MFT`;
 
         alert(message);
     }
 
     function exportMetadata(entryNumber) {
-        const message = `📋 METADATA EXPORT\\n` +
+        const message = `METADATA EXPORT\\n` +
               `${'='.repeat(60)}\\n\\n` +
-              `🔢 MFT Entry: #${entryNumber}\\n\\n` +
+              `MFT Entry: #${entryNumber}\\n\\n` +
               `To export full metadata to JSON:\\n\\n` +
               `  1. Run the recovery tool:\\n` +
               `     python mft_recovery_tool.py mft_analyzer_state_<timestamp>.pkl\\n\\n` +
               `  2. Select option 5 (Export metadata to JSON)\\n\\n` +
               `  3. Enter entry number: ${entryNumber}\\n\\n` +
-              `📦 Exported file includes:\\n` +
-              `   • All MFT record fields\\n` +
-              `   • Complete timestamp history (MACB)\\n` +
-              `   • Data run details (cluster allocation)\\n` +
-              `   • Parent directory references\\n` +
-              `   • Anomaly flags (timestomping, ADS)\\n` +
-              `   • Recovery assessment\\n\\n` +
-              `📄 Output: mft_entry_${entryNumber}_metadata.json\\n\\n` +
+              `Exported file includes:\\n` +
+              `   - All MFT record fields\\n` +
+              `   - Complete timestamp history (MACB)\\n` +
+              `   - Data run details (cluster allocation)\\n` +
+              `   - Parent directory references\\n` +
+              `   - Anomaly flags (timestomping, ADS)\\n` +
+              `   - Recovery assessment\\n\\n` +
+              `Output: mft_entry_${entryNumber}_metadata.json\\n\\n` +
               `${'='.repeat(60)}`;
 
         alert(message);
@@ -319,7 +323,7 @@ def generate_mft_anomalies_section(anomalies):
         <div class="command-card" style="border: 2px solid rgba(239, 68, 68, 0.5);">
             <div class="command-card-header" onclick="toggleCommandOutput(this)" style="background: rgba(239, 68, 68, 0.1);">
                 <div class="command-title">
-                    <span class="cmd-type-badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">⚠️ ANOMALIES</span>
+                    <span class="cmd-type-badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">ANOMALIES</span>
                     <span>Suspicious MFT Patterns Detected</span>
                 </div>
                 <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -336,7 +340,7 @@ def generate_mft_anomalies_section(anomalies):
         html += f'''
                     <div style="margin-bottom: 24px;">
                         <h3 style="color: #ef4444; margin-bottom: 12px;">
-                            🔴 Timestomped Files ({len(timestomped)})
+                            Timestomped Files ({len(timestomped)})
                         </h3>
                         <p style="color: #9ca3af; margin-bottom: 12px; font-size: 0.9rem;">
                             Files with modified timestamps that don't match MFT records (anti-forensics technique)
@@ -379,7 +383,7 @@ def generate_mft_anomalies_section(anomalies):
         html += f'''
                     <div style="margin-bottom: 24px;">
                         <h3 style="color: #f59e0b; margin-bottom: 12px;">
-                            🟡 Alternate Data Streams (ADS) Detected ({len(hidden_ads)})
+                            Alternate Data Streams (ADS) Detected ({len(hidden_ads)})
                         </h3>
                         <p style="color: #9ca3af; margin-bottom: 12px; font-size: 0.9rem;">
                             Files with hidden alternate data streams (can be used to hide malicious content)
@@ -452,7 +456,7 @@ def generate_deleted_files_table(deleted_files):
         <div class="command-card">
             <div class="command-card-header" onclick="toggleCommandOutput(this)">
                 <div class="command-title">
-                    <span class="cmd-type-badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">🗑️ DELETED FILES</span>
+                    <span class="cmd-type-badge" style="background: rgba(239, 68, 68, 0.2); color: #ef4444;">DELETED FILES</span>
                     <span>Recovered Deleted File Records ({len(deleted_files)} shown)</span>
                 </div>
                 <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -460,16 +464,18 @@ def generate_deleted_files_table(deleted_files):
                 </svg>
             </div>
             <div class="command-card-body" style="display: block;">
-                <!-- ⚠️ WARNING: Recently Deleted Files Notice -->
+                <!-- WARNING: Recently Deleted Files Notice -->
                 <div style="padding: 16px; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4);
                             border-radius: 8px; margin-bottom: 16px;">
                     <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="font-size: 32px;">⚠️</div>
+                        <div style="font-size: 32px; color: #fbbf24;">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        </div>
                         <div style="flex: 1;">
                             <strong style="color: #fbbf24; font-size: 1rem;">Important: Recently Deleted Files</strong>
                             <p style="margin: 4px 0 0 0; color: #d1d5db; font-size: 0.85rem; line-height: 1.5;">
                                 If you just deleted files (Shift+Delete) and they're not showing here, wait 10-30 seconds and run the scan again.
-                                Windows may still be writing MFT changes to disk. Files marked with 🔴 <strong>RECENTLY_DELETED</strong> were found
+                                Windows may still be writing MFT changes to disk. Files marked as <strong>RECENTLY_DELETED</strong> were found
                                 within the last 60 seconds and may have incomplete metadata.
                             </p>
                         </div>
@@ -479,7 +485,7 @@ def generate_deleted_files_table(deleted_files):
                 <!-- Age Filter Controls -->
                 <div style="padding: 16px; background: rgba(139, 92, 246, 0.1); border-radius: 8px; margin-bottom: 16px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #a78bfa; font-weight: 600; font-size: 0.9rem;">📅 Filter by Age:</span>
+                        <span style="color: #a78bfa; font-weight: 600; font-size: 0.9rem;">Filter by Age:</span>
                         <select id="ageFilter" onchange="filterDeletedFilesByAge()"
                                 style="padding: 6px 12px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(139, 92, 246, 0.3);
                                        border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
@@ -493,15 +499,15 @@ def generate_deleted_files_table(deleted_files):
                         </select>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #a78bfa; font-weight: 600; font-size: 0.9rem;">🔍 Recovery Status:</span>
+                        <span style="color: #a78bfa; font-weight: 600; font-size: 0.9rem;">Recovery Status:</span>
                         <select id="recoveryFilter" onchange="filterDeletedFilesByAge()"
                                 style="padding: 6px 12px; background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(139, 92, 246, 0.3);
                                        border-radius: 6px; cursor: pointer; font-size: 0.9rem;">
                             <option value="all">All Status</option>
-                            <option value="FULL">✅ Fully Recoverable</option>
-                            <option value="PARTIAL">⚠️ Partially Recoverable</option>
-                            <option value="METADATA_ONLY">📋 Metadata Only</option>
-                            <option value="OVERWRITTEN">❌ Overwritten</option>
+                            <option value="FULL">Fully Recoverable</option>
+                            <option value="PARTIAL">Partially Recoverable</option>
+                            <option value="METADATA_ONLY">Metadata Only</option>
+                            <option value="OVERWRITTEN">Overwritten</option>
                         </select>
                     </div>
                     <div id="filterStats" style="margin-left: auto; color: #8b5cf6; font-size: 0.85rem; font-weight: 600;">
@@ -529,7 +535,7 @@ def generate_deleted_files_table(deleted_files):
     from datetime import datetime, timedelta
     now = datetime.now()
 
-    # ⚠️ CRITICAL FIX: Sort deleted files by modification date (most recent first)
+    # CRITICAL FIX: Sort deleted files by modification date (most recent first)
     # This ensures newly deleted files appear at the top
     sorted_deleted_files = sorted(
         deleted_files[:500],  # Limit to 500 for performance
@@ -576,7 +582,7 @@ def generate_deleted_files_table(deleted_files):
         # Check if this file was deleted very recently (warning flag)
         recently_deleted_warning = ""
         if hasattr(record, 'anomaly_flags') and 'RECENTLY_DELETED' in record.anomaly_flags:
-            recently_deleted_warning = '<span style="color: #fbbf24; font-size: 0.7rem; margin-left: 8px;">🔴 JUST DELETED</span>'
+            recently_deleted_warning = '<span style="color: #fbbf24; font-size: 0.7rem; margin-left: 8px;">JUST DELETED</span>'
 
         # Add data attributes for filtering
         html += f'''
@@ -591,32 +597,22 @@ def generate_deleted_files_table(deleted_files):
                                     <div style="display: flex; gap: 4px; flex-wrap: wrap;">
         '''
 
-        if can_recover:
+        if can_recover and is_resident:
             html += f'''
-                                        <button onclick="recoverFile({entry_num}, '{filename}')"
-                                                style="padding: 4px 8px; background: #10b981; color: white; border: none;
-                                                       border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: 600;"
-                                                title="Recover file content">
-                                            💾 Recover
-                                        </button>
-            '''
-
-            if is_resident:
-                html += f'''
                                         <button onclick="previewFile({entry_num}, '{filename}')"
-                                                style="padding: 4px 8px; background: #3b82f6; color: white; border: none;
-                                                       border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: 600;"
+                                                style="padding: 3px 6px; background: #3b82f6; color: white; border: none;
+                                                       border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: 600;"
                                                 title="Preview file content">
-                                            👁️ Preview
+                                            Preview
                                         </button>
                 '''
 
         html += f'''
                                         <button onclick="exportMetadata({entry_num})"
-                                                style="padding: 4px 8px; background: #6b7280; color: white; border: none;
-                                                       border-radius: 4px; cursor: pointer; font-size: 0.75rem; font-weight: 600;"
+                                                style="padding: 3px 6px; background: #6b7280; color: white; border: none;
+                                                       border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: 600;"
                                                 title="Export metadata">
-                                            📋 Info
+                                            Info
                                         </button>
                                     </div>
                                 </td>
@@ -627,13 +623,13 @@ def generate_deleted_files_table(deleted_files):
                         </tbody>
                     </table>
                     <div style="margin-top: 16px; padding: 16px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border-left: 4px solid #10b981;">
-                        <strong style="color: #10b981;">🔍 Recovery Status Legend:</strong><br>
-                        • <span class="badge badge-green">✅ FULL</span> - All data clusters free, 100% recoverable by this tool<br>
-                        • <span class="badge badge-orange">⚠️ PARTIAL</span> - Some clusters overwritten, partial data recoverable<br>
-                        • <span class="badge badge-gray">📋 METADATA_ONLY</span> - Only file metadata available<br>
+                        <strong style="color: #10b981;">Recovery Status Legend:</strong><br>
+                        • <span class="badge badge-green">FULL</span> - All data clusters free, 100% recoverable by this tool<br>
+                        • <span class="badge badge-orange">PARTIAL</span> - Some clusters overwritten, partial data recoverable<br>
+                        • <span class="badge badge-gray">METADATA_ONLY</span> - Only file metadata available<br>
                         <br>
-                        <strong style="color: #10b981;">💾 Built-in Recovery:</strong> Use the recovery buttons in each row to extract file content directly<br>
-                        <strong style="color: #10b981;">📊 Export Options:</strong> Export metadata to CSV for further analysis
+                        <strong style="color: #10b981;">Built-in Recovery:</strong> Use the recovery buttons in each row to extract file content directly<br>
+                        <strong style="color: #10b981;">Export Options:</strong> Export metadata to CSV for further analysis
                     </div>
                 </div>
             </div>
@@ -654,7 +650,7 @@ def generate_mft_timeline_section(timeline):
         <div class="command-card">
             <div class="command-card-header" onclick="toggleCommandOutput(this)">
                 <div class="command-title">
-                    <span class="cmd-type-badge" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6;">📅 TIMELINE</span>
+                    <span class="cmd-type-badge" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6;">TIMELINE</span>
                     <span>File Deletion Timeline ({len(timeline)} events)</span>
                 </div>
                 <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

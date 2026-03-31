@@ -34,7 +34,7 @@ def generate_pagefile_tab(pagefile_data: Dict) -> str:
     <div id="tab-pagefile" class="tab-content">
         <div class="analysis-header">
             <div class="header-left">
-                <h1>💾 Pagefile.sys Analysis - Virtual Memory Forensics</h1>
+                <h1>Pagefile.sys Analysis - Virtual Memory Forensics</h1>
                 <p>Forensic analysis of Windows virtual memory swap file (pagefile.sys)</p>
             </div>
         </div>
@@ -46,13 +46,15 @@ def generate_pagefile_tab(pagefile_data: Dict) -> str:
         <div style="background: rgba(239, 68, 68, 0.15); border: 2px solid rgba(239, 68, 68, 0.5);
                     border-radius: 12px; padding: 20px; margin: 20px 0;">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <div style="font-size: 48px;">🔐</div>
+                <div style="font-size: 48px; color: #ef4444;">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                </div>
                 <div style="flex: 1;">
-                    <h3 style="margin: 0 0 8px 0; color: #ef4444;">⚠️  SENSITIVE DATA DETECTED</h3>
+                    <h3 style="margin: 0 0 8px 0; color: #ef4444;">SENSITIVE DATA DETECTED</h3>
                     <p style="margin: 0; color: #fca5a5; font-size: 0.95rem; line-height: 1.6;">
                         Found <strong>{sensitive_count}</strong> potentially sensitive items (passwords, credit cards, PII).
-                        <br><strong>⚠️  CRITICAL:</strong> Handle this data according to your organization's security policies.
-                        <br><strong>💡 RECOMMENDATION:</strong> Redact sensitive information before sharing reports.
+                        <br><strong>CRITICAL:</strong> Handle this data according to your organization's security policies.
+                        <br><strong>RECOMMENDATION:</strong> Redact sensitive information before sharing reports.
                     </p>
                 </div>
             </div>
@@ -95,7 +97,7 @@ def generate_unavailable_message() -> str:
     <div id="tab-pagefile" class="tab-content">
         <div class="analysis-header">
             <div class="header-left">
-                <h1>💾 Pagefile.sys Analysis</h1>
+                <h1>Pagefile.sys Analysis</h1>
                 <p>Virtual Memory Forensics</p>
             </div>
         </div>
@@ -103,7 +105,9 @@ def generate_unavailable_message() -> str:
         <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);
                     border-radius: 12px; padding: 24px; margin: 20px 0;">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <div style="font-size: 48px;">ℹ️</div>
+                <div style="font-size: 48px; color: #3b82f6;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                </div>
                 <div>
                     <h3 style="margin: 0 0 8px 0; color: #3b82f6;">Pagefile Analysis Unavailable</h3>
                     <p style="margin: 0; color: #9ca3af; line-height: 1.6;">
@@ -170,7 +174,7 @@ def generate_statistics_section(stats: Dict) -> str:
         </div>
 
         <div class="stat-card" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.1)); padding: 20px; border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3);">
-            <div style="font-size: 0.85rem; color: #fca5a5; text-transform: uppercase; font-weight: 600; margin-bottom: 8px;">🔐 Sensitive Items</div>
+            <div style="font-size: 0.85rem; color: #fca5a5; text-transform: uppercase; font-weight: 600; margin-bottom: 8px;">Sensitive Items</div>
             <div style="font-size: 1.75rem; font-weight: 700; color: #ef4444;">{sensitive_items:,}</div>
         </div>
     </div>
@@ -188,7 +192,7 @@ def generate_pagefile_info_section() -> str:
         <div class="command-card">
             <div class="command-card-header" onclick="toggleCommandOutput(this)">
                 <div class="command-title">
-                    <span class="cmd-type-badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">ℹ️ INFO</span>
+                    <span class="cmd-type-badge" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6;">INFO</span>
                     <span>What is Pagefile.sys?</span>
                 </div>
                 <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -210,7 +214,7 @@ def generate_pagefile_info_section() -> str:
                         <li><strong>Process Memory:</strong> Running program internal data structures</li>
                     </ul>
                     <div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 16px; margin-top: 16px; border-radius: 4px;">
-                        <strong style="color: #10b981;">🔍 Forensic Value:</strong><br>
+                        <strong style="color: #10b981;">Forensic Value:</strong><br>
                         <span style="color: #d1d5db;">
                             Even after a system reboot, pagefile.sys persists on disk. This means you can recover:
                             <br>• Data from programs that were closed hours/days ago
@@ -235,7 +239,7 @@ def generate_urls_section(urls: List[Dict]) -> str:
         <div class="command-card">
             <div class="command-card-header" onclick="toggleCommandOutput(this)">
                 <div class="command-title">
-                    <span class="cmd-type-badge" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6;">🌐 URLs</span>
+                    <span class="cmd-type-badge" style="background: rgba(139, 92, 246, 0.2); color: #8b5cf6;">URLs</span>
                     <span>Top URLs Found in Pagefile ({len(urls)} unique)</span>
                 </div>
                 <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -273,7 +277,7 @@ def generate_urls_section(urls: List[Dict]) -> str:
         }
         category_style = category_colors.get(category, category_colors['browsing'])
 
-        sensitive_badge = '🔐' if is_sensitive else ''
+        sensitive_badge = '[SENSITIVE]' if is_sensitive else ''
 
         html += f'''
                             <tr>
@@ -304,7 +308,7 @@ def generate_emails_section(emails: List[Dict]) -> str:
         <div class="command-card">
             <div class="command-card-header" onclick="toggleCommandOutput(this)">
                 <div class="command-title">
-                    <span class="cmd-type-badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">📧 EMAILS</span>
+                    <span class="cmd-type-badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;">EMAILS</span>
                     <span>Email Addresses Found ({len(emails)} unique)</span>
                 </div>
                 <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -328,7 +332,7 @@ def generate_emails_section(emails: List[Dict]) -> str:
         count = email_data.get('count', 1)
         is_sensitive = email_data.get('is_sensitive', False)
 
-        sensitive_badge = '🔐' if is_sensitive else ''
+        sensitive_badge = '[SENSITIVE]' if is_sensitive else ''
 
         html += f'''
                             <tr>
@@ -341,7 +345,7 @@ def generate_emails_section(emails: List[Dict]) -> str:
                         </tbody>
                     </table>
                     <div style="margin-top: 16px; padding: 12px; background: rgba(245, 158, 11, 0.1); border-radius: 8px; border-left: 4px solid #f59e0b;">
-                        <strong style="color: #f59e0b;">⚠️  Privacy Note:</strong><br>
+                        <strong style="color: #f59e0b;">Privacy Note:</strong><br>
                         <span style="color: #d1d5db; font-size: 0.9rem;">
                             Email addresses may belong to the user, contacts, or appear in website content.
                             Verify context before making assumptions about identity or communications.
@@ -365,7 +369,7 @@ def generate_paths_section(paths: List[Dict]) -> str:
         <div class="command-card">
             <div class="command-card-header" onclick="toggleCommandOutput(this)">
                 <div class="command-title">
-                    <span class="cmd-type-badge" style="background: rgba(99, 102, 241, 0.2); color: #6366f1;">📁 PATHS</span>
+                    <span class="cmd-type-badge" style="background: rgba(99, 102, 241, 0.2); color: #6366f1;">PATHS</span>
                     <span>File Paths Found ({len(paths)} unique)</span>
                 </div>
                 <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -400,7 +404,7 @@ def generate_paths_section(paths: List[Dict]) -> str:
         }
         category_style = category_colors.get(category, category_colors['files'])
 
-        sensitive_badge = '🔐' if is_sensitive else ''
+        sensitive_badge = '[SENSITIVE]' if is_sensitive else ''
 
         # Truncate long paths
         display_path = path if len(path) <= 80 else '...' + path[-77:]
@@ -434,7 +438,7 @@ def generate_forensic_notes_section() -> str:
         <div class="command-card">
             <div class="command-card-header" onclick="toggleCommandOutput(this)">
                 <div class="command-title">
-                    <span class="cmd-type-badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">📝 NOTES</span>
+                    <span class="cmd-type-badge" style="background: rgba(16, 185, 129, 0.2); color: #10b981;">NOTES</span>
                     <span>Forensic Investigation Notes</span>
                 </div>
                 <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -444,7 +448,7 @@ def generate_forensic_notes_section() -> str:
             <div class="command-card-body">
                 <div class="command-output">
                     <div style="padding: 16px; background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; border-radius: 4px; margin-bottom: 16px;">
-                        <strong style="color: #10b981;">🔍 Investigation Tips:</strong><br>
+                        <strong style="color: #10b981;">Investigation Tips:</strong><br>
                         <ul style="color: #d1d5db; line-height: 1.8; margin: 12px 0; padding-left: 24px;">
                             <li>Pagefile artifacts persist across reboots (until overwritten)</li>
                             <li>Strings may be fragmented - use context clues to reconstruct</li>
@@ -455,7 +459,7 @@ def generate_forensic_notes_section() -> str:
                     </div>
 
                     <div style="padding: 16px; background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; border-radius: 4px; margin-bottom: 16px;">
-                        <strong style="color: #ef4444;">⚠️  Legal & Privacy Considerations:</strong><br>
+                        <strong style="color: #ef4444;">Legal & Privacy Considerations:</strong><br>
                         <ul style="color: #d1d5db; line-height: 1.8; margin: 12px 0; padding-left: 24px;">
                             <li><strong>Chain of Custody:</strong> Document pagefile hash before analysis</li>
                             <li><strong>PII Protection:</strong> Redact sensitive data in reports (SSN, credit cards, passwords)</li>
@@ -466,7 +470,7 @@ def generate_forensic_notes_section() -> str:
                     </div>
 
                     <div style="padding: 16px; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 4px;">
-                        <strong style="color: #3b82f6;">💡 Advanced Analysis:</strong><br>
+                        <strong style="color: #3b82f6;">Advanced Analysis:</strong><br>
                         <ul style="color: #d1d5db; line-height: 1.8; margin: 12px 0; padding-left: 24px;">
                             <li>Use <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">strings -el</code> for little-endian Unicode extraction</li>
                             <li>Carve images with <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">photorec</code> or <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px;">foremost</code></li>

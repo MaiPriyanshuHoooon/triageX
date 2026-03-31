@@ -26,7 +26,7 @@ def generate_browser_history_tab(browser_history, browser_stats):
     <div id="tab-browser" class="tab-content">
         <div class="analysis-header">
             <div class="header-left">
-                <h1>🌐 Browser History Analysis</h1>
+                <h1>Browser History Analysis</h1>
                 <p>Forensic timeline reconstruction of web browsing activity</p>
             </div>
         </div>
@@ -71,7 +71,7 @@ def generate_browser_history_tab(browser_history, browser_stats):
         if most_visited_domains:
             html += '''
             <div class="card" style="margin-bottom: 24px;">
-                <h3>📊 Most Visited Sites (Unique Domains)</h3>
+                <h3>Most Visited Sites (Unique Domains)</h3>
                 <p style="color: #6c757d; margin-bottom: 16px;">Grouped by domain to remove redundant routes/pages</p>
                 <table class="data-table">
                     <thead>
@@ -125,7 +125,7 @@ def generate_browser_history_tab(browser_history, browser_stats):
                     <!-- Search Bar -->
                     <div style="margin-bottom: 16px;">
                         <label style="display: block; margin-bottom: 8px; color: #e2e8f0; font-size: 14px; font-weight: 600;">
-                            🔍 Search Websites
+                            Search Websites
                         </label>
                         <div style="position: relative;">
                             <input type="text"
@@ -141,7 +141,7 @@ def generate_browser_history_tab(browser_history, browser_stats):
                             </button>
                         </div>
                         <p style="margin-top: 6px; color: #6c757d; font-size: 12px; font-style: italic;">
-                            💡 Tip: Search is case-insensitive and searches across URLs, titles, and domains
+                            Tip: Search is case-insensitive and searches across URLs, titles, and domains
                         </p>
                     </div>
 

@@ -78,12 +78,12 @@ def execute_cmd(cmd):
 
         return subprocess.check_output(cmd, **kwargs)
     except subprocess.CalledProcessError as e:
-        error_msg = f"❌ Command failed (Error Code: {e.returncode})"
+        error_msg = f"[ERROR] Command failed (Error Code: {e.returncode})"
         if e.output:
             error_msg += f"\n\nError Details:\n{e.output[:500]}"
         return error_msg
     except Exception as e:
-        return f"❌ Error: {str(e)}"
+        return f"[ERROR] Error: {str(e)}"
 
 
 def execute_powershell(cmd):
@@ -111,14 +111,14 @@ def execute_powershell(cmd):
         result = subprocess.check_output(powershell_cmd, **kwargs)
         return result
     except subprocess.CalledProcessError as e:
-        error_msg = f"❌ PowerShell command failed (Error Code: {e.returncode})"
+        error_msg = f"[ERROR] PowerShell command failed (Error Code: {e.returncode})"
         if e.output:
             error_msg += f"\n\nError Details:\n{e.output[:500]}"
         return error_msg
     except FileNotFoundError:
-        return "❌ PowerShell not found on this system (Windows only)"
+        return "[ERROR] PowerShell not found on this system (Windows only)"
     except Exception as e:
-        return f"❌ Error: {str(e)}"
+        return f"[ERROR] Error: {str(e)}"
 
 
 def execute_bash(cmd):
@@ -132,12 +132,12 @@ def execute_bash(cmd):
         )
         return result
     except subprocess.CalledProcessError as e:
-        error_msg = f"❌ Bash command failed (Error Code: {e.returncode})"
+        error_msg = f"[ERROR] Bash command failed (Error Code: {e.returncode})"
         if e.output:
             error_msg += f"\n\nError Details:\n{e.output[:500]}"
         return error_msg
     except subprocess.TimeoutExpired:
-        return "❌ Command timed out (120s limit)"
+        return "[ERROR] Command timed out (120s limit)"
     except FileNotFoundError:
         # Fallback to sh if bash not available
         try:
@@ -149,9 +149,9 @@ def execute_bash(cmd):
             )
             return result
         except Exception as e:
-            return f"❌ Shell not found: {str(e)}"
+            return f"[ERROR] Shell not found: {str(e)}"
     except Exception as e:
-        return f"❌ Error: {str(e)}"
+        return f"[ERROR] Error: {str(e)}"
 
 
 def execute_zsh(cmd):
@@ -165,12 +165,12 @@ def execute_zsh(cmd):
         )
         return result
     except subprocess.CalledProcessError as e:
-        error_msg = f"❌ Zsh command failed (Error Code: {e.returncode})"
+        error_msg = f"[ERROR] Zsh command failed (Error Code: {e.returncode})"
         if e.output:
             error_msg += f"\n\nError Details:\n{e.output[:500]}"
         return error_msg
     except subprocess.TimeoutExpired:
-        return "❌ Command timed out (120s limit)"
+        return "[ERROR] Command timed out (120s limit)"
     except FileNotFoundError:
         # Fallback to bash if zsh not available
         try:
@@ -182,9 +182,9 @@ def execute_zsh(cmd):
             )
             return result
         except Exception as e:
-            return f"❌ Shell not found: {str(e)}"
+            return f"[ERROR] Shell not found: {str(e)}"
     except Exception as e:
-        return f"❌ Error: {str(e)}"
+        return f"[ERROR] Error: {str(e)}"
 
 
 def execute(cmd):
