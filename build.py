@@ -422,14 +422,84 @@ def _create_dmg(dist_dir):
     return None
 
 
+# -- AVML Download for Linux Build ---------------------------------
+def _download_avml_for_linux():
+    """Download the AVML binary to bundle with the Linux distribution.
+
+    Returns the path to the downloaded binary, or None if download fails.
+    Uses the same version and URLs as core/avml_manager.py.
+    """
+    import urllib.request
+    import urllib.error
+
+    AVML_VERSION = "0.17.0"
+    arch = platform.machine()
+    bin_map = {"x86_64": "avml", "aarch64": "avml-aarch64", "arm64": "avml-aarch64"}
+    bin_name = bin_map.get(arch)
+
+    if bin_name is None:
+        warn(f"No pre-built AVML binary for {arch} — skipping bundle")
+        return None
+
+    url = f"https://github.com/microsoft/avml/releases/download/v{AVML_VERSION}/{bin_name}"
+    dest_dir = PROJECT_ROOT / "build" / "avml_bundle"
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    dest = dest_dir / "avml"
+
+    if dest.exists() and dest.stat().st_size > 400_000:
+        ok(f"AVML binary already cached ({dest})")
+        return dest
+
+    print(f"    Downloading AVML v{AVML_VERSION} ({bin_name}) ...")
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "triageX-build"})
+        with urllib.request.urlopen(req, timeout=120) as resp, open(dest, "wb") as f:
+            total = int(resp.headers.get("Content-Length", 0))
+            downloaded = 0
+            while True:
+                chunk = resp.read(65536)
+                if not chunk:
+                    break
+                f.write(chunk)
+                downloaded += len(chunk)
+                if total:
+                    pct = downloaded * 100 // total
+                    print(f"\r    [{pct:3d}%] {downloaded:,} / {total:,} bytes", end="", flush=True)
+            print()  # newline after progress
+    except (urllib.error.URLError, urllib.error.HTTPError, OSError) as exc:
+        warn(f"Failed to download AVML: {exc}")
+        if dest.exists():
+            dest.unlink()
+        return None
+
+    if dest.stat().st_size < 400_000:
+        warn(f"AVML download too small ({dest.stat().st_size} bytes) — corrupt?")
+        dest.unlink()
+        return None
+
+    dest.chmod(0o755)
+    ok(f"AVML v{AVML_VERSION} downloaded ({dest.stat().st_size / 1024 / 1024:.2f} MB)")
+    return dest
+
+
 # -- Linux Build ---------------------------------------------------
 def build_linux(mode="onefile"):
     """Build Linux binary. Default to onefile for easy distribution."""
-    total = 6
+    total = 7
     step(1, total, "Preparing Linux build...")
 
     hidden = _hidden_imports("Linux")
     data = _data_pairs()
+
+    # Download AVML binary to bundle
+    step(2, total, "Downloading AVML memory acquisition tool...")
+    avml_bin = _download_avml_for_linux()
+    if avml_bin:
+        # Bundle into avml_tools/ directory inside the distribution
+        data.append((str(avml_bin), "avml_tools"))
+        ok("AVML will be bundled with the distribution")
+    else:
+        warn("AVML not bundled — will auto-download at runtime on Linux")
 
     cmd = [
         sys.executable, "-m", "PyInstaller",
@@ -463,10 +533,10 @@ def build_linux(mode="onefile"):
 
     cmd.append(str(PROJECT_ROOT / ENTRY_POINT))
 
-    step(2, total, "Running PyInstaller...")
+    step(3, total, "Running PyInstaller...")
     run(cmd)
 
-    step(3, total, "Verifying output...")
+    step(4, total, "Verifying output...")
     if mode == "onefile":
         binary = PROJECT_ROOT / "dist" / APP_NAME
     else:
@@ -481,15 +551,17 @@ def build_linux(mode="onefile"):
     ok(f"Built: {binary}  ({size_mb:.1f} MB)")
 
     # Create .desktop launcher
-    step(4, total, "Creating .desktop launcher & AppDir...")
+    step(5, total, "Creating .desktop launcher & AppDir...")
     create_linux_desktop(binary)
 
-    step(5, total, "Writing distribution README...")
+    step(6, total, "Writing distribution README...")
     write_readme("Linux", PROJECT_ROOT / "dist")
 
-    step(6, total, "Build complete!")
+    step(7, total, "Build complete!")
     print(f"\n  {C_GREEN}{'='*50}")
     print(f"   Output: {binary}")
+    if avml_bin:
+        print(f"   AVML:   Bundled (v0.17.0)")
     print(f"   Run:    sudo ./{APP_NAME}")
     print(f"  {'='*50}{C_RESET}\n")
     return binary

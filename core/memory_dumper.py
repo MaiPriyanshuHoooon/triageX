@@ -3,11 +3,12 @@ Memory Dump Module
 ==================
 Cross-platform volatile memory acquisition for forensic triage.
 
-Linux:   Reads /proc/iomem for System RAM ranges, dumps from /proc/kcore, /dev/crash, or /dev/mem
+Linux:   Uses AVML (auto-downloaded) for full physical RAM dump in LiME format,
+         with fallback to /proc/kcore, /dev/crash, or /dev/mem for samples
 macOS:   Collects VM stats, process memory maps, and system memory info
 Windows: Collects existing crash dumps, hibernation file info, and process memory details
 
-Inspired by Microsoft's AVML (Acquire Volatile Memory for Linux).
+AVML source: https://github.com/microsoft/avml (MIT License, Microsoft)
 """
 
 import os
@@ -318,6 +319,201 @@ class LinuxMemoryDumper:
 
         return self.results["dump_info"]
 
+    # ---------- Full AVML memory dump ----------
+
+    def acquire_full_dump(self, compress=True, max_wait=600):
+        """
+        Acquire a FULL physical memory dump using Microsoft AVML.
+
+        Downloads the AVML binary (if not cached), then runs it with sudo
+        to capture the entire physical RAM in LiME format. The output file
+        is placed in the output directory and linked in the HTML report
+        as a downloadable artifact.
+
+        Args:
+            compress: Use Snappy compression (--compress). Saves ~40-60% space.
+            max_wait: Maximum seconds to wait for the dump to complete.
+
+        Returns:
+            dict with dump metadata (status, output_file, sha256, size, etc.)
+        """
+        from core.avml_manager import get_avml_binary, is_avml_available, AVML_VERSION
+
+        # Pre-flight checks
+        avml_check = is_avml_available(self.output_dir)
+        if not avml_check["available"]:
+            self.results["dump_info"] = {
+                "status": "failed",
+                "reason": avml_check["reason"],
+                "recommendation": "AVML requires Linux x86_64 or aarch64.",
+            }
+            return self.results["dump_info"]
+
+        if not is_admin():
+            self.results["dump_info"] = {
+                "status": "failed",
+                "reason": "Root/sudo privileges required for full memory acquisition",
+                "recommendation": "Run triageX with sudo for full memory dump.",
+            }
+            return self.results["dump_info"]
+
+        # Get AVML binary (downloads if needed)
+        try:
+            avml_path = get_avml_binary(self.output_dir)
+        except RuntimeError as e:
+            self.results["dump_info"] = {
+                "status": "failed",
+                "reason": f"Could not obtain AVML binary: {e}",
+                "recommendation": "Check internet connection, or manually place avml in output/avml_tools/",
+            }
+            self.results["errors"].append(f"AVML download failed: {e}")
+            return self.results["dump_info"]
+
+        # Build output filename
+        ext = ".lime.compressed" if compress else ".lime"
+        dump_filename = f"memory_dump_{self.timestamp}{ext}"
+        dump_path = os.path.join(self.output_dir, dump_filename)
+
+        # Build AVML command
+        cmd = [str(avml_path)]
+        if compress:
+            cmd.append("--compress")
+        cmd.append(dump_path)
+
+        logger.info(f"Starting AVML memory acquisition: {' '.join(cmd)}")
+        print(f"    [*] Acquiring full memory dump with AVML v{AVML_VERSION}...")
+        print(f"    [*] Output: {dump_filename}")
+        if compress:
+            print(f"    [*] Compression: Snappy (enabled)")
+
+        start_time = time.time()
+
+        try:
+            proc = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+            # Monitor progress by watching file size growth
+            last_size = 0
+            total_ram = self.results.get("system_memory", {}).get("total", 0)
+
+            while proc.poll() is None:
+                time.sleep(2)
+                elapsed = time.time() - start_time
+
+                if elapsed > max_wait:
+                    proc.kill()
+                    self.results["dump_info"] = {
+                        "status": "failed",
+                        "reason": f"AVML timed out after {max_wait}s",
+                        "recommendation": "System may have too much RAM for the timeout. Increase max_wait.",
+                    }
+                    return self.results["dump_info"]
+
+                # Show progress
+                if os.path.exists(dump_path):
+                    current_size = os.path.getsize(dump_path)
+                    if current_size != last_size:
+                        speed = current_size / elapsed if elapsed > 0 else 0
+                        size_str = self._human_size(current_size)
+                        speed_str = self._human_size(speed) + "/s"
+                        if total_ram > 0:
+                            # Rough estimate (compressed output is smaller than RAM)
+                            ratio = 0.6 if compress else 1.0
+                            pct = min((current_size / (total_ram * ratio)) * 100, 99)
+                            print(f"\r    [*] Dumping... {size_str} ({pct:.0f}%) @ {speed_str}   ", end="", flush=True)
+                        else:
+                            print(f"\r    [*] Dumping... {size_str} @ {speed_str}   ", end="", flush=True)
+                        last_size = current_size
+
+            # Process finished
+            print()  # newline after progress
+            returncode = proc.returncode
+            stdout = proc.stdout.read().decode(errors="replace").strip()
+            stderr = proc.stderr.read().decode(errors="replace").strip()
+
+            elapsed = time.time() - start_time
+
+            if returncode != 0:
+                error_msg = stderr or stdout or f"AVML exited with code {returncode}"
+                self.results["dump_info"] = {
+                    "status": "failed",
+                    "reason": error_msg,
+                    "returncode": returncode,
+                    "duration_seconds": round(elapsed, 2),
+                    "recommendation": (
+                        "Kernel lockdown may be active. Check: "
+                        "cat /sys/kernel/security/lockdown"
+                    ),
+                }
+                self.results["errors"].append(f"AVML failed: {error_msg}")
+                return self.results["dump_info"]
+
+            # Success — gather metadata
+            if not os.path.exists(dump_path):
+                self.results["dump_info"] = {
+                    "status": "failed",
+                    "reason": "AVML returned success but output file not found",
+                }
+                return self.results["dump_info"]
+
+            file_size = os.path.getsize(dump_path)
+            dump_hash = compute_file_hash(dump_path, "sha256")
+
+            print(f"    [+] Memory dump complete!")
+            print(f"    [+] File: {dump_filename}")
+            print(f"    [+] Size: {self._human_size(file_size)}")
+            print(f"    [+] Duration: {elapsed:.1f}s")
+            print(f"    [+] SHA-256: {dump_hash[:32]}...")
+
+            self.results["dump_info"] = {
+                "status": "success",
+                "method": "avml",
+                "avml_version": AVML_VERSION,
+                "source": "auto (AVML selects best: /proc/kcore > /dev/crash > /dev/mem)",
+                "output_file": dump_path,
+                "output_filename": dump_filename,
+                "bytes_dumped": file_size,
+                "size_human": self._human_size(file_size),
+                "compressed": compress,
+                "format": "lime_compressed" if compress else "lime",
+                "format_description": "LiME format (Linux Memory Extractor) — compatible with Volatility, Rekall",
+                "sha256": dump_hash,
+                "duration_seconds": round(elapsed, 2),
+                "timestamp": self.timestamp,
+                "downloadable": True,
+            }
+
+        except FileNotFoundError:
+            self.results["dump_info"] = {
+                "status": "failed",
+                "reason": "AVML binary not found or not executable",
+                "recommendation": "Ensure the AVML binary was downloaded correctly.",
+            }
+            self.results["errors"].append("AVML binary not found")
+        except PermissionError:
+            self.results["dump_info"] = {
+                "status": "failed",
+                "reason": "Permission denied — AVML requires root privileges",
+                "recommendation": "Run triageX with: sudo python3 forensics_tool.py",
+            }
+        except Exception as e:
+            self.results["dump_info"] = {
+                "status": "failed",
+                "reason": str(e),
+                "recommendation": "Check system logs for details.",
+            }
+            self.results["errors"].append(f"AVML error: {e}")
+
+        return self.results["dump_info"]
+
+    @staticmethod
+    def _human_size(size_bytes):
+        """Convert bytes to human-readable format."""
+        return get_human_readable_size(size_bytes)
+
     # ---------- Process memory info ----------
 
     def get_process_memory_info(self, top_n=20):
@@ -414,12 +610,13 @@ class LinuxMemoryDumper:
 
     # ---------- Full collection ----------
 
-    def collect_all(self, acquire_sample=False, sample_max_mb=64):
+    def collect_all(self, acquire_sample=False, acquire_full=False, sample_max_mb=64):
         """
         Run all Linux memory analysis steps.
 
         Args:
-            acquire_sample: Whether to attempt a memory sample dump (requires root)
+            acquire_sample: Whether to attempt a small memory sample dump (requires root)
+            acquire_full: Whether to attempt a FULL memory dump via AVML (requires root)
             sample_max_mb: Max size of sample dump in MB
         """
         self.results["status"] = "collecting"
@@ -440,14 +637,17 @@ class LinuxMemoryDumper:
         # 5. Process memory
         self.get_process_memory_info(top_n=20)
 
-        # 6. Optional: acquire memory sample
-        if acquire_sample:
+        # 6. Memory acquisition
+        if acquire_full:
+            # Full physical RAM dump via AVML
+            self.acquire_full_dump(compress=True)
+        elif acquire_sample:
             self.acquire_memory_sample(max_mb=sample_max_mb)
         else:
             self.results["dump_info"] = {
                 "status": "skipped",
-                "reason": "Memory sample acquisition not requested",
-                "recommendation": "For full memory dump, use AVML: sudo ./avml --compress output.lime",
+                "reason": "Memory acquisition not requested",
+                "recommendation": "Enable full memory dump for complete forensic capture.",
             }
 
         self.results["status"] = "completed"

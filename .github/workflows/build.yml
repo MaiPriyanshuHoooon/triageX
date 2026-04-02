@@ -245,6 +245,12 @@ jobs:
             | **macOS** | `ForensicTool-macOS-arm64.dmg` | Double-click DMG → Double-click **triageX-Launcher** → Enter password |
             | **Linux** | `ForensicTool-Linux-x64.tar.gz` | Extract → `chmod +x ForensicTool` → `sudo ./ForensicTool` |
 
+            ### Linux Memory Acquisition (AVML)
+            - The Linux build bundles **Microsoft AVML v0.17.0** for full physical memory dumps
+            - Produces LiME-format images compatible with Volatility 3 and Rekall
+            - Requires root/sudo — memory dump file is downloadable from the HTML report
+            - Supports x86_64 and aarch64 architectures
+
             ### macOS Users
             - Open the `.dmg` file — no Terminal commands needed
             - Double-click **triageX-Launcher.command** inside the DMG

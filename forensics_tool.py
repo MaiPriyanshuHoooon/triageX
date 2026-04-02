@@ -352,7 +352,7 @@ class ForensicCollector:
 
         try:
             dumper = get_memory_dumper(self.output_dir, os_type=self.current_os)
-            memory_data = dumper.collect_all(acquire_sample=False)
+            memory_data = dumper.collect_all(acquire_full=True)
 
             # Add to activity log
             self.activity_log.append({
@@ -890,7 +890,7 @@ def run_forensic_collection():
     try:
         output_dir = os.path.dirname(os.path.abspath(html_file))
         memory_dumper = get_memory_dumper(output_dir, os_type=current_os)
-        memory_data = memory_dumper.collect_all(acquire_sample=False)
+        memory_data = memory_dumper.collect_all(acquire_full=True)
 
         summary = memory_data.get('summary', {})
         print(f"{'='*70}")

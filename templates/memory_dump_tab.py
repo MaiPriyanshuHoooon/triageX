@@ -167,7 +167,7 @@ def _generate_linux_tab(data):
     sources_html = f"""
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h2>Memory Acquisition Sources (AVML-compatible)</h2>
+            <h2>Memory Acquisition Sources</h2>
         </div>
         <div style="padding: 1rem;">
             <table class="data-table" style="width: 100%;">
@@ -177,8 +177,7 @@ def _generate_linux_tab(data):
                 <tbody>{sources_rows}</tbody>
             </table>
             <p style="margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
-                For full physical RAM dump, use:
-                <code style="color: var(--accent-green);">sudo ./avml --compress output.lime</code>
+                AVML auto-selects the best available source for full memory acquisition.
             </p>
         </div>
     </div>"""
@@ -245,7 +244,7 @@ def _generate_linux_tab(data):
             <div id="tab-memory" class="tab-content">
                 <div class="tab-header">
                     <h1>Memory Analysis</h1>
-                    <span style="color: var(--text-muted); font-size: 0.9rem;">Linux • AVML-compatible Analysis</span>
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">Linux • AVML Memory Acquisition</span>
                 </div>
                 {alerts_html}
                 {stats_html}
@@ -565,32 +564,99 @@ def _generate_windows_tab(data):
 # ============================================================
 
 def _generate_dump_info_card(dump_info):
-    """Generate the dump status info card."""
+    """Generate the dump status info card with download link for successful dumps."""
     if not dump_info:
         return ""
 
     status = dump_info.get("status", "unknown")
     if status == "success":
+        # Determine if this is a full AVML dump or a sample
+        is_avml = dump_info.get("method") == "avml"
+        title = "Full Memory Dump Acquired (AVML)" if is_avml else "Memory Sample Acquired"
+        avml_version = dump_info.get("avml_version", "")
+        version_badge = f' <span style="background:rgba(59,130,246,0.2);color:#60a5fa;padding:2px 8px;border-radius:4px;font-size:0.75rem;margin-left:0.5rem;">AVML v{avml_version}</span>' if avml_version else ""
+
+        format_desc = dump_info.get("format_description", "")
+        format_note = f'<tr><td style="font-weight:600;">Compatibility</td><td style="font-size:0.85rem;">{format_desc}</td></tr>' if format_desc else ""
+
+        compressed_note = ""
+        if dump_info.get("compressed"):
+            compressed_note = '<tr><td style="font-weight:600;">Compression</td><td>Snappy (page-level)</td></tr>'
+
+        # Download link — uses relative path so it works when report is opened locally
+        output_file = dump_info.get("output_file", "")
+        output_filename = dump_info.get("output_filename", "memory_dump.lime")
+        download_html = ""
+        if output_file and dump_info.get("downloadable"):
+            download_html = f"""
+            <div style="margin-top: 1.25rem; padding: 1.25rem;
+                        background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(16,185,129,0.08));
+                        border: 1px solid rgba(59,130,246,0.3);
+                        border-radius: 10px; text-align: center;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+                     stroke="#60a5fa" stroke-width="2" style="margin-bottom: 0.5rem;">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <div style="margin-bottom: 0.75rem;">
+                    <span style="color: var(--text-primary); font-weight: 600; font-size: 1rem;">
+                        Memory Dump File
+                    </span>
+                    <br>
+                    <code style="color: #60a5fa; font-size: 0.85rem;">{output_filename}</code>
+                    <span style="color: var(--text-muted); font-size: 0.8rem; margin-left: 0.5rem;">
+                        ({dump_info.get('size_human', 'N/A')})
+                    </span>
+                </div>
+                <a href="{output_filename}"
+                   download="{output_filename}"
+                   style="display: inline-block; padding: 0.65rem 2rem;
+                          background: linear-gradient(135deg, #3b82f6, #2563eb);
+                          color: white; text-decoration: none; border-radius: 8px;
+                          font-weight: 600; font-size: 0.9rem;
+                          box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+                          transition: all 0.2s ease;">
+                    Download Memory Dump
+                </a>
+                <p style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted);">
+                    Open with: Volatility 3, Rekall, or any LiME-compatible forensic tool
+                </p>
+            </div>"""
+
         return f"""
     <div class="card" style="margin-top: 1.5rem;">
         <div class="card-header">
-            <h2>Memory Sample Acquired</h2>
+            <h2>{title}{version_badge}</h2>
         </div>
         <div style="padding: 1rem;">
             <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3);
                         border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
-                <span style="color: #10b981; font-weight: 600;">Memory sample successfully acquired</span>
+                <span style="color: #10b981; font-weight: 600; font-size: 1.05rem;">
+                    Memory successfully acquired
+                </span>
             </div>
             <table class="data-table" style="width: 100%;">
                 <tbody>
-                    <tr><td style="width:180px;font-weight:600;">Source</td><td><code>{dump_info.get('source', 'N/A')}</code></td></tr>
-                    <tr><td style="font-weight:600;">Output File</td><td><code>{dump_info.get('output_filename', 'N/A')}</code></td></tr>
-                    <tr><td style="font-weight:600;">Size</td><td>{dump_info.get('size_human', 'N/A')}</td></tr>
-                    <tr><td style="font-weight:600;">SHA-256</td><td style="word-break:break-all;"><code style="font-size:0.75rem;">{dump_info.get('sha256', 'N/A')}</code></td></tr>
-                    <tr><td style="font-weight:600;">Format</td><td>{dump_info.get('format', 'N/A')}</td></tr>
-                    <tr><td style="font-weight:600;">Duration</td><td>{dump_info.get('duration_seconds', 'N/A')}s</td></tr>
+                    <tr><td style="width:180px;font-weight:600;">Source</td>
+                        <td><code>{dump_info.get('source', 'N/A')}</code></td></tr>
+                    <tr><td style="font-weight:600;">Output File</td>
+                        <td><code>{dump_info.get('output_filename', 'N/A')}</code></td></tr>
+                    <tr><td style="font-weight:600;">Size</td>
+                        <td>{dump_info.get('size_human', 'N/A')}</td></tr>
+                    <tr><td style="font-weight:600;">Format</td>
+                        <td>{dump_info.get('format', 'N/A')}</td></tr>
+                    {compressed_note}
+                    {format_note}
+                    <tr><td style="font-weight:600;">SHA-256</td>
+                        <td style="word-break:break-all;">
+                            <code style="font-size:0.75rem;">{dump_info.get('sha256', 'N/A')}</code>
+                        </td></tr>
+                    <tr><td style="font-weight:600;">Duration</td>
+                        <td>{dump_info.get('duration_seconds', 'N/A')}s</td></tr>
                 </tbody>
             </table>
+            {download_html}
         </div>
     </div>"""
     elif status == "skipped":
