@@ -109,6 +109,7 @@ jobs:
 
           SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
           APP_PATH="$SCRIPT_DIR/ForensicTool.app"
+          BINARY="$APP_PATH/Contents/MacOS/ForensicTool"
 
           if [ ! -d "$APP_PATH" ]; then
               osascript -e 'display dialog "ForensicTool.app not found.\nMake sure it is in the same folder as this launcher." with title "triageX" buttons {"OK"} default button "OK" with icon stop'
@@ -118,8 +119,9 @@ jobs:
           # Remove quarantine attribute so macOS doesn't block it
           xattr -rd com.apple.quarantine "$APP_PATH" 2>/dev/null
 
-          # Ask for password and launch with elevated privileges
-          osascript -e "do shell script \"open '$APP_PATH'\" with administrator privileges"
+          # Launch the actual binary with elevated privileges.
+          # Using the binary directly (not "open") so sudo context is preserved.
+          osascript -e "do shell script \"'$BINARY'\" with administrator privileges"
           LAUNCHER
           chmod +x dist/triageX-Launcher.command
 
@@ -264,12 +266,11 @@ jobs:
             - 500 MB free disk space
 
             ### What's New in ${{ github.ref_name }}
-            - Interactive dashboard with multi-ring sunburst chart
-            - Threat score visualization (clamped 0-100 scale)
-            - System info displayed in persistent footer bar
-            - Analysis module cards with real-time data
-            - macOS DMG installer (no Terminal needed)
-            - Node 20+ CI/CD pipeline
+            - **AVML Integration**: Full physical memory acquisition on Linux via Microsoft AVML v0.17.0
+            - **Download card**: Memory dump file downloadable directly from HTML report
+            - **macOS Launcher fix**: App now properly launches with elevated privileges (double-click works)
+            - AVML binary bundled in Linux distribution (no internet needed at runtime)
+            - LiME format output compatible with Volatility 3, Rekall
           files: |
             ForensicTool-Windows-x64/*.zip
             ForensicTool-macOS-arm64/*.dmg

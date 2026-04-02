@@ -38,7 +38,7 @@ from pathlib import Path
 
 # -- Constants ------------------------------------------------------
 APP_NAME = "ForensicTool"
-APP_VERSION = "2.0.2"
+APP_VERSION = "2.0.3"
 APP_ID = "com.triagex.forensictool"
 ENTRY_POINT = "main.py"                        # PyQt6 entry point
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -350,6 +350,7 @@ def _create_macos_launcher(dist_dir):
         '\n'
         'SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"\n'
         'APP_PATH="$SCRIPT_DIR/ForensicTool.app"\n'
+        'BINARY="$APP_PATH/Contents/MacOS/ForensicTool"\n'
         '\n'
         'if [ ! -d "$APP_PATH" ]; then\n'
         '    osascript -e \'display dialog "ForensicTool.app not found.\\n'
@@ -361,8 +362,9 @@ def _create_macos_launcher(dist_dir):
         '# Remove quarantine so Gatekeeper does not block it\n'
         'xattr -rd com.apple.quarantine "$APP_PATH" 2>/dev/null\n'
         '\n'
-        '# Ask for password and launch with elevated privileges\n'
-        'osascript -e "do shell script \\"open \'$APP_PATH\'\\" '
+        '# Launch the actual binary with elevated privileges.\n'
+        '# Using the binary directly (not \"open\") so sudo context is preserved.\n'
+        'osascript -e "do shell script \\"\'$BINARY\'\\" '
         'with administrator privileges"\n',
         encoding="utf-8",
     )
