@@ -266,11 +266,12 @@ jobs:
             - 500 MB free disk space
 
             ### What's New in ${{ github.ref_name }}
-            - **AVML Integration**: Full physical memory acquisition on Linux via Microsoft AVML v0.17.0
-            - **Download card**: Memory dump file downloadable directly from HTML report
-            - **macOS Launcher fix**: App now properly launches with elevated privileges (double-click works)
-            - AVML binary bundled in Linux distribution (no internet needed at runtime)
-            - LiME format output compatible with Volatility 3, Rekall
+            - **Write Blocker**: Software write-blocking for USB/external drives on Windows (registry + per-disk via PowerShell Set-Disk)
+            - **License Key Generator**: Standalone admin GUI to generate device-locked license keys without touching code
+            - **1-Day Trial**: Trial period reduced to 1 day with full feature access
+            - **License bug fix**: Expiry date now displays correctly in the License Info tab
+            - **Tab bar scrolling**: Tab bar now scrolls horizontally when tabs overflow window width
+            - **UI cleanup**: All emojis removed from application UI for a professional appearance
           files: |
             ForensicTool-Windows-x64/*.zip
             ForensicTool-macOS-arm64/*.dmg

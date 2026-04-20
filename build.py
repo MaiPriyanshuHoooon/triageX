@@ -38,7 +38,7 @@ from pathlib import Path
 
 # -- Constants ------------------------------------------------------
 APP_NAME = "ForensicTool"
-APP_VERSION = "2.0.3"
+APP_VERSION = "2.1.0"
 APP_ID = "com.triagex.forensictool"
 ENTRY_POINT = "main.py"                        # PyQt6 entry point
 PROJECT_ROOT = Path(__file__).resolve().parent
