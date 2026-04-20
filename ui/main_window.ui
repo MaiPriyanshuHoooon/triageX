@@ -43,9 +43,15 @@
       <property name="currentIndex">
        <number>0</number>
       </property>
+      <property name="usesScrollButtons">
+       <bool>true</bool>
+      </property>
+      <property name="tabsClosable">
+       <bool>false</bool>
+      </property>
       <widget class="QWidget" name="forensicTab">
        <attribute name="title">
-        <string>🔍 Forensic Scan</string>
+        <string>Forensic Scan</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_3">
         <item>
@@ -60,7 +66,7 @@
            <item>
             <widget class="QPushButton" name="browseButton">
              <property name="text">
-              <string>📁 Browse</string>
+              <string>Browse</string>
              </property>
             </widget>
            </item>
@@ -70,7 +76,7 @@
         <item>
          <widget class="QPushButton" name="startButton">
           <property name="text">
-           <string> Start Forensic Collection</string>
+           <string>Start Forensic Collection</string>
           </property>
          </widget>
         </item>
@@ -97,7 +103,7 @@
            <bool>false</bool>
           </property>
           <property name="text">
-           <string>📄 Open Forensic Report</string>
+           <string>Open Forensic Report</string>
           </property>
          </widget>
         </item>
@@ -118,7 +124,7 @@
       </widget>
       <widget class="QWidget" name="logTab">
        <attribute name="title">
-        <string>📋 Activity Log</string>
+        <string>Activity Log</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
@@ -131,7 +137,204 @@
         <item>
          <widget class="QPushButton" name="clearLogButton">
           <property name="text">
-           <string>🗑️ Clear Log</string>
+           <string>Clear Log</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="writeblockerTab">
+       <attribute name="title">
+        <string>Write Blocker</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="wbMainLayout">
+        <item>
+         <widget class="QGroupBox" name="wbStatusGroup">
+          <property name="title">
+           <string>Global USB Write Protection (Registry)</string>
+          </property>
+          <layout class="QVBoxLayout" name="wbStatusLayout">
+           <item>
+            <widget class="QLabel" name="wbStatusLabel">
+             <property name="text">
+              <string>Status: Unknown</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="wbRegBtnLayout">
+             <item>
+              <widget class="QPushButton" name="wbEnableButton">
+               <property name="text">
+                <string>Enable Write Block</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="wbDisableButton">
+               <property name="text">
+                <string>Disable Write Block</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="wbRefreshStatusButton">
+               <property name="text">
+                <string>Refresh Status</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="wbDiskGroup">
+          <property name="title">
+           <string>Connected USB / External Disks</string>
+          </property>
+          <layout class="QVBoxLayout" name="wbDiskLayout">
+           <item>
+            <widget class="QTableWidget" name="wbDiskTable">
+             <property name="columnCount">
+              <number>5</number>
+             </property>
+             <attribute name="horizontalHeaderItem">
+              <column>0</column>
+              <item>
+               <property name="text">
+                <string>Disk #</string>
+               </property>
+              </item>
+             </attribute>
+             <attribute name="horizontalHeaderItem">
+              <column>1</column>
+              <item>
+               <property name="text">
+                <string>Name</string>
+               </property>
+              </item>
+             </attribute>
+             <attribute name="horizontalHeaderItem">
+              <column>2</column>
+              <item>
+               <property name="text">
+                <string>Bus</string>
+               </property>
+              </item>
+             </attribute>
+             <attribute name="horizontalHeaderItem">
+              <column>3</column>
+              <item>
+               <property name="text">
+                <string>Size (GB)</string>
+               </property>
+              </item>
+             </attribute>
+             <attribute name="horizontalHeaderItem">
+              <column>4</column>
+              <item>
+               <property name="text">
+                <string>Write-Blocked</string>
+               </property>
+              </item>
+             </attribute>
+             <property name="selectionBehavior">
+              <enum>QAbstractItemView::SelectRows</enum>
+             </property>
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="wbDiskBtnLayout">
+             <item>
+              <widget class="QPushButton" name="wbBlockDiskButton">
+               <property name="text">
+                <string>Block Selected Disk</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="wbUnblockDiskButton">
+               <property name="text">
+                <string>Unblock Selected Disk</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="wbRefreshDisksButton">
+               <property name="text">
+                <string>Refresh Disks</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QGroupBox" name="wbPnpGroup">
+          <property name="title">
+           <string>USB Mass Storage Devices (PnP)</string>
+          </property>
+          <layout class="QVBoxLayout" name="wbPnpLayout">
+           <item>
+            <widget class="QTableWidget" name="wbPnpTable">
+             <property name="columnCount">
+              <number>3</number>
+             </property>
+             <attribute name="horizontalHeaderItem">
+              <column>0</column>
+              <item>
+               <property name="text">
+                <string>Friendly Name</string>
+               </property>
+              </item>
+             </attribute>
+             <attribute name="horizontalHeaderItem">
+              <column>1</column>
+              <item>
+               <property name="text">
+                <string>Instance ID</string>
+               </property>
+              </item>
+             </attribute>
+             <attribute name="horizontalHeaderItem">
+              <column>2</column>
+              <item>
+               <property name="text">
+                <string>Status</string>
+               </property>
+              </item>
+             </attribute>
+             <property name="selectionBehavior">
+              <enum>QAbstractItemView::SelectRows</enum>
+             </property>
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="wbLogLabel">
+          <property name="text">
+           <string>Write Blocker is available on Windows only. Run triageX as Administrator for full functionality.</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
@@ -139,7 +342,7 @@
       </widget>
       <widget class="QWidget" name="licenseTab">
        <attribute name="title">
-        <string>🔐 License Info</string>
+        <string>License Info</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_5">
         <item>
@@ -175,7 +378,7 @@
         <item>
          <widget class="QPushButton" name="upgradeButton">
           <property name="text">
-           <string>⬆️ Upgrade License</string>
+           <string>Upgrade License</string>
           </property>
          </widget>
         </item>

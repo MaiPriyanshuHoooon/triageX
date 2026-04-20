@@ -8,7 +8,7 @@ import sys
 import webbrowser
 from datetime import datetime
 
-from PyQt6.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QApplication
+from PyQt6.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QApplication, QTableWidgetItem
 from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QRect
 from PyQt6.QtGui import QFont, QTextCursor
 from PyQt6 import uic
@@ -17,6 +17,7 @@ from license_manager import LicenseManager
 from .forensic_worker import ForensicWorker
 from .license_dialog import LicenseActivationDialog
 from core.os_detector import detect_os, is_admin, get_os_info
+from core import write_blocker
 
 
 class ForensicToolGUI(QMainWindow):
@@ -103,6 +104,19 @@ class ForensicToolGUI(QMainWindow):
         self.clearLogButton.clicked.connect(self.logViewer.clear)
         self.upgradeButton.clicked.connect(self.show_activation_dialog)
 
+        # Write Blocker signals (Windows only)
+        if self.current_os == "Windows":
+            self.wbEnableButton.clicked.connect(self.wb_enable)
+            self.wbDisableButton.clicked.connect(self.wb_disable)
+            self.wbRefreshStatusButton.clicked.connect(self.wb_refresh_status)
+            self.wbBlockDiskButton.clicked.connect(self.wb_block_disk)
+            self.wbUnblockDiskButton.clicked.connect(self.wb_unblock_disk)
+            self.wbRefreshDisksButton.clicked.connect(self.wb_refresh_disks)
+            self.wb_refresh_status()
+            self.wb_refresh_disks()
+        else:
+            self._wb_set_windows_only_mode()
+
     def update_license_display(self):
         """Update license information in UI"""
         if self.license_info:
@@ -156,28 +170,27 @@ class ForensicToolGUI(QMainWindow):
         if not is_admin():
             if self.current_os == "Windows":
                 warn_text = (
-                    "⚠️  Not running as Administrator!\n\n"
+                    "Not running as Administrator!\n\n"
                     "Some features will be limited:\n"
-                    "  • MFT (Master File Table) analysis\n"
-                    "  • Pagefile.sys analysis\n"
-                    "  • Some registry keys\n"
-                    "  • Low-level disk access\n\n"
+                    "  - MFT (Master File Table) analysis\n"
+                    "  - Pagefile.sys analysis\n"
+                    "  - Some registry keys\n"
+                    "  - Low-level disk access\n\n"
                     "For complete forensic data collection:\n"
-                    "  → Close this application\n"
-                    "  → Right-click the EXE\n"
-                    "  → Select 'Run as Administrator'\n\n"
+                    "  Close this application, right-click the EXE,\n"
+                    "  and select 'Run as Administrator'.\n\n"
                     "Continue with limited access?"
                 )
             else:
                 warn_text = (
-                    f"⚠️  Not running as root ({self.current_os})!\n\n"
+                    f"Not running as root ({self.current_os})!\n\n"
                     "Some features will be limited:\n"
-                    "  • System log access\n"
-                    "  • Full process listing\n"
-                    "  • Network connection details\n"
-                    "  • USB device history\n\n"
-                    f"For complete forensic data:\n"
-                    f"  → Re-run with: sudo python3 {sys.argv[0]}\n\n"
+                    "  - System log access\n"
+                    "  - Full process listing\n"
+                    "  - Network connection details\n"
+                    "  - USB device history\n\n"
+                    f"For complete forensic data, re-run with:\n"
+                    f"  sudo python3 {sys.argv[0]}\n\n"
                     "Continue with limited access?"
                 )
 
@@ -220,7 +233,7 @@ class ForensicToolGUI(QMainWindow):
     def collection_finished(self, report_path: str):
         """Handle collection completion"""
         self.report_path = report_path
-        self.progressLabel.setText("✅ Forensic collection complete!")
+        self.progressLabel.setText("Forensic collection complete!")
         self.progressLabel.setStyleSheet("color: #66BB6A; font-weight: bold; font-size: 11pt;")
 
         self.startButton.setEnabled(True)
@@ -229,7 +242,7 @@ class ForensicToolGUI(QMainWindow):
         QMessageBox.information(
             self,
             "Collection Complete",
-            f"✅ Forensic collection completed successfully!\n\n"
+            f"Forensic collection completed successfully!\n\n"
             f"Report saved to:\n{report_path}\n\n"
             f"Click 'Open Forensic Report' to view results."
         )
@@ -237,7 +250,7 @@ class ForensicToolGUI(QMainWindow):
     def collection_error(self, error_msg: str):
         """Handle collection error"""
         self.log_message(error_msg)
-        self.progressLabel.setText("❌ Collection failed!")
+        self.progressLabel.setText("Collection failed!")
         self.progressLabel.setStyleSheet("color: #ef5350; font-weight: bold; font-size: 11pt;")
 
         self.startButton.setEnabled(True)
@@ -248,6 +261,144 @@ class ForensicToolGUI(QMainWindow):
         """Open forensic report in browser"""
         if self.report_path and os.path.exists(self.report_path):
             webbrowser.open(f"file://{os.path.abspath(self.report_path)}")
-            self.log_message(f"📄 Opened report: {self.report_path}")
+            self.log_message(f"[Report] Opened: {self.report_path}")
         else:
             QMessageBox.warning(self, "No Report", "No report found. Run forensic collection first!")
+
+    # ── Write Blocker ─────────────────────────────────────────────────────────
+
+    def _wb_set_windows_only_mode(self):
+        """Disable all write blocker controls when not on Windows."""
+        for btn in (self.wbEnableButton, self.wbDisableButton, self.wbRefreshStatusButton,
+                    self.wbBlockDiskButton, self.wbUnblockDiskButton, self.wbRefreshDisksButton):
+            btn.setEnabled(False)
+        self.wbStatusLabel.setText("Write Blocker is only available on Windows")
+        self.wbStatusLabel.setStyleSheet("color: #FFA726; font-weight: bold;")
+        self.wbLogLabel.setText(
+            "Write Blocker requires a Windows system. "
+            "This tab is shown for reference only on non-Windows platforms."
+        )
+
+    def wb_refresh_status(self):
+        """Refresh the global write-protect registry status."""
+        status = write_blocker.get_write_protect_status()
+        if status["error"]:
+            self.wbStatusLabel.setText(f"Warning: {status['error']}")
+            self.wbStatusLabel.setStyleSheet("color: #FFA726; font-weight: bold; font-size: 11pt;")
+        elif status["enabled"]:
+            self.wbStatusLabel.setText("Write Protection: ENABLED  —  all USB storage is blocked from writing")
+            self.wbStatusLabel.setStyleSheet("color: #ef5350; font-weight: bold; font-size: 11pt;")
+        else:
+            self.wbStatusLabel.setText("Write Protection: DISABLED  —  USB storage is writable")
+            self.wbStatusLabel.setStyleSheet("color: #66BB6A; font-weight: bold; font-size: 11pt;")
+        self.log_message(f"[Write Blocker] Registry status refreshed — enabled={status['enabled']}")
+
+    def wb_enable(self):
+        """Enable global USB write protection via registry."""
+        result = write_blocker.set_write_protect(True)
+        if result["success"]:
+            QMessageBox.information(self, "Write Blocker", result['message'])
+            self.log_message("[Write Blocker] Global write protection ENABLED via registry")
+        else:
+            QMessageBox.critical(self, "Write Blocker Error", result['message'])
+            self.log_message(f"[Write Blocker] Error enabling: {result['message']}")
+        self.wb_refresh_status()
+
+    def wb_disable(self):
+        """Disable global USB write protection via registry."""
+        confirm = QMessageBox.question(
+            self, "Confirm",
+            "Are you sure you want to DISABLE USB Write Protection?\n\n"
+            "This will allow connected USB devices to be written to.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+        result = write_blocker.set_write_protect(False)
+        if result["success"]:
+            QMessageBox.information(self, "Write Blocker", result['message'])
+            self.log_message("[Write Blocker] Global write protection DISABLED via registry")
+        else:
+            QMessageBox.critical(self, "Write Blocker Error", result['message'])
+            self.log_message(f"[Write Blocker] Error disabling: {result['message']}")
+        self.wb_refresh_status()
+
+    def wb_refresh_disks(self):
+        """Refresh both USB disk table and PnP device table."""
+        # ── Disk table ──────────────────────────────────────────────────
+        disks = write_blocker.get_usb_disks()
+        self.wbDiskTable.setRowCount(len(disks))
+        for row, disk in enumerate(disks):
+            self.wbDiskTable.setItem(row, 0, QTableWidgetItem(str(disk["number"])))
+            self.wbDiskTable.setItem(row, 1, QTableWidgetItem(disk["name"]))
+            self.wbDiskTable.setItem(row, 2, QTableWidgetItem(disk["bus"]))
+            self.wbDiskTable.setItem(row, 3, QTableWidgetItem(str(disk["size_gb"])))
+            blocked_text = "YES" if disk["is_readonly"] else "NO"
+            item = QTableWidgetItem(blocked_text)
+            item.setForeground(
+                __import__("PyQt6.QtGui", fromlist=["QColor"]).QColor(
+                    "#ef5350" if disk["is_readonly"] else "#66BB6A"
+                )
+            )
+            self.wbDiskTable.setItem(row, 4, item)
+        self.wbDiskTable.resizeColumnsToContents()
+        self.log_message(f"[Write Blocker] Found {len(disks)} USB disk(s)")
+
+        # ── PnP device table ────────────────────────────────────────────
+        devices = write_blocker.get_usb_pnp_devices()
+        self.wbPnpTable.setRowCount(len(devices))
+        for row, dev in enumerate(devices):
+            self.wbPnpTable.setItem(row, 0, QTableWidgetItem(dev["name"]))
+            self.wbPnpTable.setItem(row, 1, QTableWidgetItem(dev["instance_id"]))
+            self.wbPnpTable.setItem(row, 2, QTableWidgetItem(dev["status"]))
+        self.wbPnpTable.resizeColumnsToContents()
+        self.log_message(f"[Write Blocker] Found {len(devices)} USB PnP mass storage device(s)")
+
+    def _wb_selected_disk_number(self) -> int | None:
+        """Return disk number of the selected row in the disk table, or None."""
+        selected = self.wbDiskTable.selectedItems()
+        if not selected:
+            QMessageBox.warning(self, "No Selection", "Please select a disk from the table first.")
+            return None
+        row = self.wbDiskTable.currentRow()
+        try:
+            return int(self.wbDiskTable.item(row, 0).text())
+        except (ValueError, AttributeError):
+            return None
+
+    def wb_block_disk(self):
+        """Write-block the selected USB disk (Set-Disk -IsReadOnly $true)."""
+        disk_num = self._wb_selected_disk_number()
+        if disk_num is None:
+            return
+        result = write_blocker.set_disk_readonly(disk_num, True)
+        if result["success"]:
+            QMessageBox.information(self, "Write Blocker", result['message'])
+            self.log_message(f"[Write Blocker] Disk {disk_num} BLOCKED (read-only)")
+        else:
+            QMessageBox.critical(self, "Write Blocker Error", result['message'])
+            self.log_message(f"[Write Blocker] Error blocking disk {disk_num}: {result['message']}")
+        self.wb_refresh_disks()
+
+    def wb_unblock_disk(self):
+        """Remove write-block from the selected USB disk (Set-Disk -IsReadOnly $false)."""
+        disk_num = self._wb_selected_disk_number()
+        if disk_num is None:
+            return
+        confirm = QMessageBox.question(
+            self, "Confirm Unblock",
+            f"Remove write block from Disk {disk_num}?\n\nThis will allow writes to the device.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+        result = write_blocker.set_disk_readonly(disk_num, False)
+        if result["success"]:
+            QMessageBox.information(self, "Write Blocker", result['message'])
+            self.log_message(f"[Write Blocker] Disk {disk_num} UNBLOCKED (read-write)")
+        else:
+            QMessageBox.critical(self, "Write Blocker Error", result['message'])
+            self.log_message(f"[Write Blocker] Error unblocking disk {disk_num}: {result['message']}")
+        self.wb_refresh_disks()
