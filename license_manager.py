@@ -178,10 +178,9 @@ class LicenseManager:
                 "virustotal_integration"
             ]
 
-        # Trial licenses have limited features
+        # Trial licenses have all features but limited duration
         if license_type == "TRIAL":
-            features = ["pagefile_analysis", "mft_analysis", "registry_analysis"]
-            days_valid = min(days_valid, 30)  # Max 30 days for trial
+            days_valid = min(days_valid, 1)  # Max 1 day for trial
 
         issue_date = datetime.now()
         expiry_date = issue_date + timedelta(days=days_valid)
@@ -241,8 +240,8 @@ class LicenseManager:
             f"{license_data['license_id']}|{device_id}".encode()
         ).decode()
 
-        print(f"✅ License saved: {output_file}")
-        print(f"📧 Send this to customer:\n")
+        print(f"License saved: {output_file}")
+        print(f"Send this to customer:\n")
         print(f"   License File: {output_file}")
         print(f"   Activation Key: {activation_key}")
         print(f"   Device ID Required: {device_id or 'Will be bound on first run'}")
@@ -318,9 +317,9 @@ class LicenseManager:
             days_remaining = (expiry_date - datetime.now()).days
 
             if license_type == "TRIAL":
-                message = f"✅ TRIAL LICENSE valid for {days_remaining} more days"
+                message = f"TRIAL LICENSE valid for {days_remaining} more days"
             else:
-                message = f"✅ FULL LICENSE valid until {expiry_date.strftime('%Y-%m-%d')}"
+                message = f"FULL LICENSE valid until {expiry_date.strftime('%Y-%m-%d')}"
 
             return True, message, license_data
 
@@ -394,16 +393,16 @@ class LicenseManager:
     def generate_trial_license(self, days: int = 7) -> str:
         """
         Generate a trial license for current device
-        
+
         Args:
             days: Number of days for trial (default: 7)
-            
+
         Returns:
             Encrypted license data string
         """
         # Get current device ID
         device_id = self.get_device_id()
-        
+
         # Create trial license
         license_data = self.create_license(
             license_type="TRIAL",
@@ -412,13 +411,13 @@ class LicenseManager:
             customer_name="Trial User",
             customer_email="trial@forensic-tool.com"
         )
-        
+
         # Encrypt and return license data
         encryption_key = self.generate_encryption_key(device_id)
         fernet = Fernet(encryption_key)
         license_json = json.dumps(license_data, indent=2)
         encrypted_data = fernet.encrypt(license_json.encode())
-        
+
         return encrypted_data.decode()
 
 
@@ -439,19 +438,19 @@ def generate_trial_license():
     customer_email = input("Customer Email: ").strip()
 
     # Get device ID from customer
-    logger.info("\n📱 Device ID:")
-    logger.info("   Ask customer to run: python -c \"from license_manager import LicenseManager; print(LicenseManager().get_device_id())\"")
+    logger.info("\nDevice ID:")
+    logger.info("   Ask customer to run the tool and copy Device ID from License Activation dialog")
     device_id = input("   Enter Device ID: ").strip().upper()
 
     if not device_id:
-        logger.error("❌ Device ID required!")
+        logger.error("Device ID required!")
         return
 
     # Create license
     license_data = lm.create_license(
         license_type="TRIAL",
         device_id=device_id,
-        days_valid=30,
+        days_valid=1,
         customer_name=customer_name,
         customer_email=customer_email
     )
@@ -460,14 +459,14 @@ def generate_trial_license():
     output_file = f"forensics_tool_trial_{device_id}.lic"
     activation_key = lm.save_license(license_data, output_file)
 
-    logger.info(f"\n📧 SEND TO CUSTOMER:")
+    logger.info(f"\nSEND TO CUSTOMER:")
     logger.info(f"   1. License file: {output_file}")
     logger.info(f"   2. Activation instructions:")
     logger.info(f"      - Copy {output_file} to tool directory")
     logger.info(f"      - Rename to: forensics_tool.lic")
     logger.info(f"      - Run tool normally")
-    logger.info(f"\n⏰ License expires: {license_data['expiry_date']}")
-    logger.info(f"✨ Enabled features: {', '.join(license_data['enabled_features'])}")
+    logger.info(f"\nLicense expires: {license_data['expiry_date']}")
+    logger.info(f"Enabled features: {', '.join(license_data['enabled_features'])}")
 
 
 def generate_full_license():
@@ -484,12 +483,12 @@ def generate_full_license():
     days_valid = int(input("Days Valid (365 for 1 year): ").strip() or "365")
 
     # Get device ID
-    logger.info("\n📱 Device ID:")
-    logger.info("   Ask customer to run: python -c \"from license_manager import LicenseManager; print(LicenseManager().get_device_id())\"")
+    logger.info("\nDevice ID:")
+    logger.info("   Ask customer to run the tool and copy Device ID from License Activation dialog")
     device_id = input("   Enter Device ID: ").strip().upper()
 
     if not device_id:
-        logger.error("❌ Device ID required!")
+        logger.error("Device ID required!")
         return
 
     # All features enabled for full license
@@ -519,14 +518,14 @@ def generate_full_license():
     output_file = f"forensics_tool_full_{device_id}.lic"
     activation_key = lm.save_license(license_data, output_file)
 
-    logger.info(f"\n📧 SEND TO CUSTOMER:")
+    logger.info(f"\nSEND TO CUSTOMER:")
     logger.info(f"   1. License file: {output_file}")
     logger.info(f"   2. Activation instructions:")
     logger.info(f"      - Copy {output_file} to tool directory")
     logger.info(f"      - Rename to: forensics_tool.lic")
     logger.info(f"      - Run tool normally")
-    logger.info(f"\n⏰ License expires: {license_data['expiry_date']}")
-    logger.info(f"✨ All features enabled")
+    logger.info(f"\nLicense expires: {license_data['expiry_date']}")
+    logger.info(f"All features enabled")
 
 
 def check_license():
@@ -539,25 +538,25 @@ def check_license():
 
     # Show device ID
     device_id = lm.get_device_id()
-    logger.info(f"\n📱 This Device ID: {device_id}")
+    logger.info(f"\nThis Device ID: {device_id}")
     logger.info(f"   (Share this with vendor to get license)")
 
     # Check license
     info = lm.get_license_info()
 
-    print(f"\n📄 License Status:")
+    print(f"\nLicense Status:")
     if info['valid']:
-        logger.info(f"   ✅ Status: VALID")
-        logger.info(f"   📛 Type: {info['license_type']}")
-        logger.info(f"   👤 Customer: {info['customer_name']}")
-        logger.info(f"   🆔 License ID: {info['license_id']}")
-        logger.info(f"   📅 Expires: {info['expiry_date']} ({info['days_remaining']} days remaining)")
-        logger.info(f"\n   ✨ Enabled Features:")
+        logger.info(f"   Status: VALID")
+        logger.info(f"   Type: {info['license_type']}")
+        logger.info(f"   Customer: {info['customer_name']}")
+        logger.info(f"   License ID: {info['license_id']}")
+        logger.info(f"   Expires: {info['expiry_date']} ({info['days_remaining']} days remaining)")
+        logger.info(f"\n   Enabled Features:")
         for feature in info['enabled_features']:
-            print(f"      • {feature}")
+            print(f"      - {feature}")
     else:
-        logger.info(f"   ❌ Status: {info['message']}")
-        logger.info(f"\n   💡 To activate:")
+        logger.info(f"   Status: {info['message']}")
+        logger.info(f"\n   To activate:")
         logger.info(f"      1. Contact vendor with Device ID: {device_id}")
         logger.info(f"      2. Receive license file: forensics_tool.lic")
         logger.info(f"      3. Place in tool directory")

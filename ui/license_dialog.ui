@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>LicenseDialog</class>
- <widget class="QDialog" name="LicenseDialog">
+ <widget class="Q        <string>Start 1-Day Trial</string>ialog" name="LicenseDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -17,7 +17,7 @@
    <item>
     <widget class="QLabel" name="titleLabel">
      <property name="text">
-      <string>🔐 License Activation</string>
+      <string>License Activation</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
@@ -33,7 +33,7 @@
       <item>
        <widget class="QLabel" name="infoLabel">
         <property name="text">
-         <string>📧 Send this Device ID to get your license key:</string>
+         <string>Send this Device ID to get your license key:</string>
         </property>
        </widget>
       </item>
@@ -47,7 +47,7 @@
       <item>
        <widget class="QPushButton" name="copyButton">
         <property name="text">
-         <string>📋 Copy to Clipboard</string>
+         <string>Copy to Clipboard</string>
         </property>
        </widget>
       </item>
@@ -63,7 +63,7 @@
       <item>
        <widget class="QLabel" name="keyLabel">
         <property name="text">
-         <string>🔑 Paste your license key below:</string>
+         <string>Paste your license key below:</string>
         </property>
        </widget>
       </item>
@@ -83,7 +83,7 @@
       <item>
        <widget class="QPushButton" name="activateButton">
         <property name="text">
-         <string>✅ Activate License</string>
+         <string>Activate License</string>
         </property>
        </widget>
       </item>

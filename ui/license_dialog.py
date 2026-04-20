@@ -41,7 +41,7 @@ class LicenseActivationDialog(QDialog):
         """Copy device ID to clipboard"""
         clipboard = QApplication.clipboard()
         clipboard.setText(self.deviceIdField.text())
-        self.statusLabel.setText("✅ Device ID copied to clipboard!")
+        self.statusLabel.setText("Device ID copied to clipboard!")
         self.statusLabel.setStyleSheet("color: #66BB6A; font-weight: bold;")
 
     def activate_license(self):
@@ -64,7 +64,7 @@ class LicenseActivationDialog(QDialog):
                 QMessageBox.information(
                     self,
                     "License Activated",
-                    f"✅ License activated successfully!\n\n"
+                    f"License activated successfully!\n\n"
                     f"Type: {license_data['license_type'].upper()}\n"
                     f"Device: {license_data['device_id'][:20]}...\n"
                     f"Expires: {license_data.get('expiry_date', 'Never')}"
@@ -74,17 +74,17 @@ class LicenseActivationDialog(QDialog):
                 QMessageBox.critical(
                     self,
                     "Activation Failed",
-                    f"❌ License activation failed!\n\n{message}"
+                    f"License activation failed!\n\n{message}"
                 )
 
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"❌ Error: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Error: {str(e)}")
 
     def start_trial(self):
-        """Start 7-day trial"""
+        """Start 1-day trial"""
         try:
             # Generate trial license for current device
-            encrypted_license = self.license_manager.generate_trial_license(days=7)
+            encrypted_license = self.license_manager.generate_trial_license(days=1)
 
             # Save to file
             with open(self.license_manager.license_file, 'w') as f:
@@ -93,9 +93,9 @@ class LicenseActivationDialog(QDialog):
             QMessageBox.information(
                 self,
                 "Trial Started",
-                "✅ 7-day trial activated!\n\nYou can now use all features for 7 days."
+                "1-day trial activated!\n\nYou have full access to all features for 1 day."
             )
             self.accept()  # Close dialog with success
 
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"❌ Error starting trial: {str(e)}")
+            QMessageBox.critical(self, "Error", f"Error starting trial: {str(e)}")

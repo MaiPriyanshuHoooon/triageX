@@ -24,7 +24,7 @@
        <item>
         <widget class="QLabel" name="titleLabel">
          <property name="text">
-          <string>🛡️ triageX — Forensic Triage Platform</string>
+          <string>triageX — Forensic Triage Platform</string>
          </property>
         </widget>
        </item>

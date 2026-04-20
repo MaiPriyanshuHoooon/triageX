@@ -124,8 +124,8 @@ class ForensicToolGUI(QMainWindow):
             self.deviceIdLabel.setText(f"Device ID: {self.license_info['device_id']}")
             self.deviceIdLabel.setStyleSheet("font-family: 'Consolas', monospace; font-size: 8pt;")
 
-            if self.license_info.get('expiration_date'):
-                self.expirationLabel.setText(f"Expires: {self.license_info['expiration_date']}")
+            if self.license_info.get('expiry_date'):
+                self.expirationLabel.setText(f"Expires: {self.license_info['expiry_date']}")
                 self.expirationLabel.setStyleSheet("color: #FFA726; font-weight: bold;")
             else:
                 self.expirationLabel.setText("Expires: Never (Perpetual License)")
