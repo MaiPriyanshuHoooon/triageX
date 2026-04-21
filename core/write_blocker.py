@@ -62,6 +62,10 @@ def get_write_protect_status() -> dict:
 def set_write_protect(enable: bool) -> dict:
     """
     Enable or disable global USB write protection via the registry.
+    When enabling: sets WriteProtect=1 under StorageDevicePolicies.
+    When disabling: sets WriteProtect=0 AND deletes the value to ensure
+    Windows fully releases the write block (setting to 0 alone is
+    sometimes ignored on certain Windows builds).
 
     Returns:
         {'success': bool, 'message': str}
@@ -71,16 +75,59 @@ def set_write_protect(enable: bool) -> dict:
 
     try:
         winreg = _open_winreg()
-        key = winreg.CreateKeyEx(
-            winreg.HKEY_LOCAL_MACHINE,
-            REG_PATH,
-            0,
-            winreg.KEY_SET_VALUE
-        )
-        winreg.SetValueEx(key, "WriteProtect", 0, winreg.REG_DWORD, 1 if enable else 0)
-        winreg.CloseKey(key)
-        state = "ENABLED" if enable else "DISABLED"
-        return {"success": True, "message": f"USB Write Protection {state}.\nA system restart may be required for the change to take full effect."}
+        if enable:
+            # Create key + set value to 1
+            key = winreg.CreateKeyEx(
+                winreg.HKEY_LOCAL_MACHINE,
+                REG_PATH,
+                0,
+                winreg.KEY_SET_VALUE
+            )
+            winreg.SetValueEx(key, "WriteProtect", 0, winreg.REG_DWORD, 1)
+            winreg.CloseKey(key)
+            return {
+                "success": True,
+                "message": "USB Write Protection ENABLED.\nA USB device plugged in after this point will be write-blocked.\nFor already-connected drives, use 'Block Selected Disk'."
+            }
+        else:
+            # Disable: first set to 0, then delete the value entirely
+            # Both steps together ensure compatibility across all Windows versions
+            errors = []
+            try:
+                key = winreg.OpenKey(
+                    winreg.HKEY_LOCAL_MACHINE,
+                    REG_PATH,
+                    0,
+                    winreg.KEY_SET_VALUE
+                )
+                winreg.SetValueEx(key, "WriteProtect", 0, winreg.REG_DWORD, 0)
+                winreg.CloseKey(key)
+            except FileNotFoundError:
+                pass  # Key doesn't exist — already disabled
+            except Exception as e:
+                errors.append(f"set-to-0: {e}")
+
+            try:
+                key = winreg.OpenKey(
+                    winreg.HKEY_LOCAL_MACHINE,
+                    REG_PATH,
+                    0,
+                    winreg.KEY_SET_VALUE
+                )
+                winreg.DeleteValue(key, "WriteProtect")
+                winreg.CloseKey(key)
+            except FileNotFoundError:
+                pass  # Value already gone — that's fine
+            except Exception as e:
+                errors.append(f"delete-value: {e}")
+
+            if errors:
+                return {"success": False, "message": f"Registry error while disabling: {'; '.join(errors)}"}
+
+            return {
+                "success": True,
+                "message": "USB Write Protection DISABLED.\nRegistry key removed. You may need to re-plug your device or restart for full effect.\nUse 'Unblock Selected Disk' to immediately release already-connected drives."
+            }
     except PermissionError:
         return {"success": False, "message": "Access denied — run triageX as Administrator"}
     except Exception as e:

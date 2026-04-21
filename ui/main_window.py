@@ -322,24 +322,56 @@ class ForensicToolGUI(QMainWindow):
         self.wb_refresh_status()
 
     def wb_disable(self):
-        """Disable global USB write protection via registry."""
+        """Disable global USB write protection via registry AND unblock all connected disks."""
         confirm = QMessageBox.question(
             self, "Confirm",
             "Are you sure you want to DISABLE USB Write Protection?\n\n"
-            "This will allow connected USB devices to be written to.",
+            "This will:\n"
+            "  • Remove the global registry write block\n"
+            "  • Unblock ALL currently connected USB/external disks\n\n"
+            "Connected devices will become writable again.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
         if confirm != QMessageBox.StandardButton.Yes:
             return
+
+        # Step 1 — clear registry key
         result = write_blocker.set_write_protect(False)
         if result["success"]:
-            QMessageBox.information(self, "Write Blocker", result['message'])
-            self.log_message("[Write Blocker] Global write protection DISABLED via registry")
+            self.log_message("[Write Blocker] Registry write protection DISABLED (WriteProtect value deleted)")
         else:
             QMessageBox.critical(self, "Write Blocker Error", result['message'])
-            self.log_message(f"[Write Blocker] Error disabling: {result['message']}")
+            self.log_message(f"[Write Blocker] Error clearing registry: {result['message']}")
+            return  # Don't proceed if registry step failed
+
+        # Step 2 — unblock every currently connected USB disk via Set-Disk -IsReadOnly $false
+        disks = write_blocker.get_usb_disks()
+        unblock_errors = []
+        for disk in disks:
+            disk_result = write_blocker.set_disk_readonly(disk["number"], False)
+            if disk_result["success"]:
+                self.log_message(f"[Write Blocker] Disk {disk['number']} ({disk['name']}) — unblocked (read-write)")
+            else:
+                unblock_errors.append(f"Disk {disk['number']}: {disk_result['message']}")
+                self.log_message(f"[Write Blocker] Warning — could not unblock Disk {disk['number']}: {disk_result['message']}")
+
+        if unblock_errors:
+            QMessageBox.warning(
+                self, "Write Blocker — Partial Disable",
+                f"Registry cleared, but failed to unblock some disks:\n\n" +
+                "\n".join(unblock_errors) +
+                "\n\nTry unplugging and re-plugging the device."
+            )
+        else:
+            QMessageBox.information(
+                self, "Write Blocker Disabled",
+                "✅ USB Write Protection fully DISABLED.\n\n"
+                "Registry key removed and all connected disks are now writable."
+            )
+
         self.wb_refresh_status()
+        self.wb_refresh_disks()
 
     def wb_refresh_disks(self):
         """Refresh both USB disk table and PnP device table."""
