@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>LicenseDialog</class>
- <widget class="Q        <string>Start 1-Day Trial</string>ialog" name="LicenseDialog">
+ <widget class="QDialog" name="LicenseDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
