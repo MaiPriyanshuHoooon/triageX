@@ -103,7 +103,7 @@
    <item>
     <widget class="QPushButton" name="trialButton">
      <property name="text">
-      <string>🕐 Start 7-Day Trial</string>
+    <string>Start 1-Day Trial</string>
      </property>
     </widget>
    </item>

@@ -31,12 +31,27 @@ class ForensicToolGUI(QMainWindow):
         self.license_info = None
         self.current_os = detect_os()
         self.os_info = get_os_info()
+        self.device_monitor = None
 
         # Check license first
         if not self.check_license():
             self.show_activation_dialog()
         else:
             self.init_ui()
+
+        # Device monitoring for macOS (auto-refresh disks on attach)
+        if self.current_os == "Darwin":
+            try:
+                from core.device_monitor import DeviceMonitor
+                self.device_monitor = DeviceMonitor(self.on_device_attached)
+                self.device_monitor.start()
+            except Exception as e:
+                print(f"Device monitoring not available: {e}")
+
+    def on_device_attached(self, info):
+        # Called when a device is attached (macOS only for now)
+        self.log_message("[Device Monitor] Device attached: {}".format(info))
+        self.wb_refresh_disks()
 
     def check_license(self) -> bool:
         """Check if valid license exists"""
@@ -227,8 +242,10 @@ class ForensicToolGUI(QMainWindow):
         button.setEnabled(False)
 
     def update_progress(self, value: int):
-        """Update progress bar with smooth animation"""
+        """Update progress bar with smooth animation and label update"""
         self.progressBar.setValue(value)
+        self.progressLabel.setText(f"Progress: {value}%")
+        QApplication.processEvents()
 
     def collection_finished(self, report_path: str):
         """Handle collection completion"""
